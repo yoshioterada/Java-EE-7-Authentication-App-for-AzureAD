@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:ui="http://java.sun.com/jsf/facelets"
+      xmlns:p="http://primefaces.org/ui">
+
+    <f:view contentType="text/html">
+        <h:head>    
+            <f:facet name="first">
+                <meta content='text/html; charset=UTF-8' http-equiv="Content-Type"/>
+                <title>PrimeFaces</title>
+            </f:facet>
+            <h:outputScript library="javascript" name="screen-operation.js"/>
+        </h:head>
+
+        <h:body>
+            <h:form id="form">
+                <p:layout fullPage="true">
+                    <p:layoutUnit position="north" size="100" resizable="true" closable="true" collapsible="true">
+                        <H3>Azure AD 情報取得画面</H3>
+                        <h:outputLink value="http://myapps.microsoft.com" >SSO 用のアクセス・パネルへ</h:outputLink>
+                    </p:layoutUnit>
+
+                    <p:layoutUnit position="west" size="175" header="Azure AD" collapsible="true">
+                        <p:menu>
+                            <p:submenu label="情報取得">
+                                <p:menuitem value="ユーザ一覧取得"   action="#{indexPage.pushGetUsersInfo()}" update="form:usertable" oncomplete="showUserTable()"/>  
+                                <p:menuitem value="グループ一覧取得"  action="#{indexPage.pushGetGroupsInfo()}" update="form:grouptable" oncomplete="showGroupTable()"/>  
+                            </p:submenu>
+                        </p:menu>
+                    </p:layoutUnit>
+
+                    <p:layoutUnit position="center" >
+                        
+                        <h:panelGroup layout="block" id="usertable" >
+                            <p:dataTable id="utbl" var="user" selectionMode="single" paginator="true"
+                                         paginatorPosition="bottom" value="#{indexPage.selectionModel}" rows="5" 
+                                         selection="#{indexPage.selectedUser}" rowKey="#{user.objectId}">
+                                <p:ajax event="rowSelect" listener="#{indexPage.onUserRowSelect}" update="form:specificUser" />
+                                <p:column headerText="表示名">
+                                    <h:outputText value="#{user.displayName}" />
+                                </p:column>
+                                <p:column headerText="プリンシパル名(ログイン ID)">
+                                    <h:outputText value="#{user.userPrincipalName}" />
+                                </p:column>
+                                <p:column headerText="オブジェクト ID">
+                                    <h:outputText value="#{user.objectId}"/>
+                                </p:column>
+                            </p:dataTable>                            
+                            <h:panelGroup layout="block" id="specificUser">
+                                <h:panelGrid columns="2" cellpadding="5">
+                                    <h:outputLabel for="displayName" value="表示名:" />
+                                    <h:outputText id="displayName" value="#{indexPage.user.displayName}"/>
+
+                                    <h:outputLabel for="surname" value="苗字:" />
+                                    <h:outputText id="surname" value="#{indexPage.user.surname}"/>
+
+                                    <h:outputLabel for="givenName" value="名前:" />
+                                    <h:outputText id="givenName" value="#{indexPage.user.givenName}"/>
+
+                                    <h:outputLabel for="userPrincipalName" value="ログイン ID:" />
+                                    <h:outputText id="userPrincipalName" value="#{indexPage.user.userPrincipalName}"/>
+
+                                    <h:outputLabel for="objectId" value="オブジェクト ID:" />
+                                    <h:outputText id="objectId" value="#{indexPage.user.objectId}"/>
+
+                                    <h:outputLabel for="odata_type" value="データ型:" />
+                                    <h:outputText id="odata_type" value="#{indexPage.user.odata_type}"/>
+
+                                    <h:outputLabel for="accountEnabled" value="アカウントの有効・無効:" />
+                                    <h:outputText id="accountEnabled" value="#{indexPage.user.accountEnabled}"/>
+
+                                    <h:outputLabel for="belongGroup" value="所属グループ ID一覧:" />                                    
+                                    <h:dataTable  border="0" binding="#{table}" var="belongGroup" value="#{indexPage.memberOfGroup}">
+                                        <h:column> 
+                                            <h:outputText id="belongGroup" value="#{indexPage.memberOfGroup[table.rowIndex]}"/>
+                                        </h:column>
+                                    </h:dataTable>
+
+                                </h:panelGrid>
+                            </h:panelGroup>
+                        </h:panelGroup>
+
+                        <h:panelGroup layout="block" id="grouptable">
+                            <p:dataTable var="group" selectionMode="single" paginator="true"
+                                         paginatorPosition="bottom" rows="5" 
+                                         value="#{indexPage.groupSelectionModel}"
+                                         selection="#{indexPage.selectedGroup}" rowKey="#{group.objectId}" > 
+                                <p:ajax event="rowSelect" listener="#{indexPage.onGroupRowSelect}" update="form:grouptable" />     
+                                <p:column headerText="グループ名">
+                                    <h:outputText value="#{group.displayName}"/>
+                                </p:column>
+                                <p:column headerText="オブジェクト ID">
+                                    <h:outputText value="#{group.objectId}"/>
+                                </p:column>
+                            </p:dataTable>
+                            <p:dataTable var="usersingroup" value="#{indexPage.users}">
+                                <p:column headerText="グループ所属メンバー">
+                                    <h:outputText value="#{usersingroup.displayName}"/>
+                                </p:column>
+                            </p:dataTable>
+                        </h:panelGroup>
+                    </p:layoutUnit>
+                </p:layout>
+            </h:form>
+        </h:body>
+    </f:view>
+</html>
+
