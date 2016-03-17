@@ -15,7 +15,7 @@
  */
 package com.yoshio3.azuread.cdis;
 
-import com.yoshio3.azuread.businessLogic.GraphAPIImpl;
+import com.yoshio3.azuread.graph.GraphAPIImpl;
 import com.yoshio3.azuread.cdis.extensionOfPF.GroupSelectionModel;
 import com.yoshio3.azuread.cdis.extensionOfPF.UserSelectionModel;
 import com.yoshio3.azuread.entities.ADGroup;
@@ -26,7 +26,6 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.PermitAll;
-import javax.annotation.security.RolesAllowed;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
@@ -272,13 +271,13 @@ public class IndexPageBackingBean implements Serializable {
         return externalContext.isUserInRole("admin");
     }
 
-    public String nextPage() {
+    public String nextPage() {        
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        if(externalContext.isUserInRole("admin")){
+        if (externalContext.isUserInRole("admin")) {
             return "nextAdmin";
-        }else if(externalContext.isUserInRole("standard")){
+        } else if (externalContext.isUserInRole("standard")) {
             return "nextStandard";
-        }else{
+        } else {
             return "";
         }
     }

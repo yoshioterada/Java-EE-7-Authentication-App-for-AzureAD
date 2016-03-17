@@ -32,9 +32,9 @@ public class AzureADCallbackHandler implements CallbackHandler {
 
     private final ThreadLocal<CallerPrincipalCallback> callerPrincipals = new ThreadLocal<>();
     private final ThreadLocal<GroupPrincipalCallback> groupPrincipals = new ThreadLocal<>();
-    private HttpServletRequest request;
-    private Subject clientSubject;
-    private AzureADUserPrincipal userPrincipal;
+    private final HttpServletRequest request;
+    private final Subject clientSubject;
+    private final AzureADUserPrincipal userPrincipal;
 
     public AzureADCallbackHandler(Subject clientSubject, HttpServletRequest request, AzureADUserPrincipal userPrincipal) {
         this.request = request;

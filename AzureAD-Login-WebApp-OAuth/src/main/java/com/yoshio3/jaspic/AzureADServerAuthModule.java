@@ -15,8 +15,7 @@
  */
 package com.yoshio3.jaspic;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
+
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
@@ -25,10 +24,8 @@ import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
-import com.yoshio3.azuread.businessLogic.GraphAPIImpl;
-import com.yoshio3.azuread.entities.ADUserMemberOfGroups;
+import com.yoshio3.azuread.graph.GraphAPIImpl;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -44,14 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonWriter;
 import javax.naming.ServiceUnavailableException;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.CallbackHandler;
@@ -67,11 +57,7 @@ import javax.security.auth.message.callback.GroupPrincipalCallback;
 import javax.security.auth.message.module.ServerAuthModule;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
-import org.glassfish.jersey.jackson.JacksonFeature;
+
 
 /**
  *

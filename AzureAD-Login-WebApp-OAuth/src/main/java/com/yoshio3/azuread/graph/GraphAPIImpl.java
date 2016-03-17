@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-package com.yoshio3.azuread.businessLogic;
+package com.yoshio3.azuread.graph;
 
 import com.yoshio3.azuread.entities.ADUsers;
 import com.yoshio3.azuread.entities.ADUser;

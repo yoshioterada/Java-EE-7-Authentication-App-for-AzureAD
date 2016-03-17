@@ -51,13 +51,13 @@ public class AzureADLoginModule implements LoginModule {
         }
         principals = subject.getPrincipals();
         Callback[] callbacks = new Callback[principals.size()];
-        for (Principal princ : principals) {
+        principals.stream().forEach((princ) -> {
             if (princ instanceof AzureADUserPrincipal) {
                 CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(subject, princ);
             }else if(princ instanceof GroupPrincipalCallback){
                 GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(subject, ((GroupPrincipalCallback) princ).getGroups());                
             }
-        }
+        });
         try {
             callbackHandler.handle(callbacks);
         } catch (IOException | UnsupportedCallbackException ex) {
