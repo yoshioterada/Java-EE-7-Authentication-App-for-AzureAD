@@ -16,12 +16,10 @@
             <param-name>secret_key</param-name>
             <param-value>szn+0CkXCyVnV62RmYkkXx5gYXWujKaO10UcIuofCKI=</param-value>
         </context-param>
-<!--
         <context-param>
             <param-name>javax.security.auth.login.LoginContext</param-name>
             <param-value>AzureAD-Login</param-value>
         </context-param>        
--->
     <context-param>
         <param-name>javax.faces.PROJECT_STAGE</param-name>
         <param-value>Development</param-value>

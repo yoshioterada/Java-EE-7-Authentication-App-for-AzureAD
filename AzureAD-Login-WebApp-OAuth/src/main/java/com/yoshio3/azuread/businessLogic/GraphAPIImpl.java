@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.yoshio3.azuread.entities.ADGroup;
 import com.yoshio3.azuread.entities.ADUserMemberOfGroups;
-import com.yoshio3.modules.AzureADUserPrincipal;
+import com.yoshio3.jaspic.AzureADUserPrincipal;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.logging.Level;
@@ -78,7 +78,20 @@ public class GraphAPIImpl implements Serializable {
 
         AzureADUserPrincipal userPrincipal = (AzureADUserPrincipal) request.getSession().getAttribute(PRINCIPAL_SESSION_NAME);
         System.out.println("UserPrincipal Access Token:" + userPrincipal.getAuthenticationResult().getAccessToken());
-        
+
+        authString = "Bearer " + userPrincipal.getAuthenticationResult().getAccessToken();
+        tenant = request.getServletContext().getInitParameter("tenant");
+
+        jaxrsClient = ClientBuilder.newClient()
+                .register((new JacksonJaxbJsonProvider(new ObjectMapper(), JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS)))
+                .register(JacksonFeature.class);
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+    }
+
+    public void init(HttpServletRequest request) {
+        AzureADUserPrincipal userPrincipal = (AzureADUserPrincipal) request.getSession().getAttribute(PRINCIPAL_SESSION_NAME);
+        System.out.println("UserPrincipal Access Token:" + userPrincipal.getAuthenticationResult().getAccessToken());
+
         authString = "Bearer " + userPrincipal.getAuthenticationResult().getAccessToken();
         tenant = request.getServletContext().getInitParameter("tenant");
 

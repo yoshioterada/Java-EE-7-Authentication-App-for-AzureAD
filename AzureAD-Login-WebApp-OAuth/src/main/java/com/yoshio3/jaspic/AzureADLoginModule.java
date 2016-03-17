@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.yoshio3.modules;
+package com.yoshio3.jaspic;
 
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import java.io.IOException;

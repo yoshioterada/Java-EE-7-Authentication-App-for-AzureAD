@@ -13,7 +13,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
  */
-package com.yoshio3.modules;
+package com.yoshio3.jaspic;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
@@ -25,19 +25,18 @@ import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
 import com.nimbusds.openid.connect.sdk.AuthenticationSuccessResponse;
-import com.yoshio3.modules.entities.ADUserMemberOfGroups;
+import com.yoshio3.azuread.businessLogic.GraphAPIImpl;
+import com.yoshio3.azuread.entities.ADUserMemberOfGroups;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.security.Principal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -45,6 +44,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonWriter;
@@ -71,7 +71,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
-import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.jackson.JacksonFeature;
 
 /**
@@ -80,6 +79,10 @@ import org.glassfish.jersey.jackson.JacksonFeature;
  */
 public class AzureADServerAuthModule implements ServerAuthModule {
 
+    public AzureADServerAuthModule(Map<String, String> options){
+        this.options = options;
+    }
+    
     private static final Logger LOGGER = Logger.getLogger(AzureADServerAuthModule.class.getName());
 
     public final static String ERROR = "error";
@@ -96,7 +99,8 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     private String clientId = "";
     private String secretKey = "";
     private String graphServer = "";
-    private final static String LOGIN_CONTEXT_NAME = "AzureAD-Login"; //login.conf に記載する名前
+    private String logContext = "";
+//    private final static String LOGIN_CONTEXT_NAME = "AzureAD-Login"; //login.conf に記載する名前
 
     static final String AUTHORIZATION_HEADER = "authorization";
 
@@ -146,6 +150,9 @@ public class AzureADServerAuthModule implements ServerAuthModule {
         }
         if (options.containsKey("graph_server")) {
             graphServer = (String) options.get("graph_server");
+        }
+        if (options.containsKey("javax.security.auth.login.LoginContext")){
+            logContext = (String)options.get("javax.security.auth.login.LoginContext");
         }
     }
 
@@ -197,7 +204,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
                     setSessionPrincipal(httpRequest, new AzureADUserPrincipal(authResult));
                 }
                 CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, sessionPrincipal);
-                String[] groups = getGroupList(sessionPrincipal);
+                String[] groups = getGroupList(httpRequest,sessionPrincipal);
                 GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, groups);
 
                 callbacks = new Callback[]{callerCallBack, groupPrincipalCallback};
@@ -259,10 +266,10 @@ public class AzureADServerAuthModule implements ServerAuthModule {
                 setSessionPrincipal(httpRequest, userPrincipal);
 
                 //ユーザ・プリンシパルの設定 //
-                String[] groups = getGroupList(userPrincipal);
+                String[] groups = getGroupList(httpRequest,userPrincipal);
                 System.out.println("グループ: " + Arrays.toString(groups));
                 AzureADCallbackHandler azureCallBackHandler = new AzureADCallbackHandler(clientSubject, httpRequest, userPrincipal);
-                loginContext = new LoginContext(LOGIN_CONTEXT_NAME, azureCallBackHandler);
+                loginContext = new LoginContext(logContext, azureCallBackHandler);
                 loginContext.login();
                 Subject subject = loginContext.getSubject();
 
@@ -299,53 +306,24 @@ public class AzureADServerAuthModule implements ServerAuthModule {
         }
     }
 
-    private static Client jaxrsClient;
-
-    private Client getConnectionFactory() {
-        if (jaxrsClient == null) {
-            jaxrsClient = ClientBuilder.newClient()
-                .register((new JacksonJaxbJsonProvider(new ObjectMapper(), JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS)))
-                .register(JacksonFeature.class);
-            return jaxrsClient;
+   
+    private static GraphAPIImpl graph;
+    
+    private GraphAPIImpl getGraphAPIImpl(HttpServletRequest request){
+        if(graph == null){
+            graph = new GraphAPIImpl();
+            graph.init(request);
+            return graph;
         }else{
-            return jaxrsClient; 
+            return graph;
         }
     }
+    
 
-    private String[] getGroupList(AzureADUserPrincipal userPrincipal) {
-        String authString = "Bearer " + userPrincipal.getAuthenticationResult().getAccessToken();
- 
-        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
-        String graphURL = String.format("https://%s/%s/users/%s/getMemberGroups", graphServer, tenant, userPrincipal.getName());
-        JsonObject model = Json.createObjectBuilder()
-                .add("securityEnabledOnly", "false")
-                .build();
-        StringWriter stWriter = new StringWriter();
-        try (JsonWriter jsonWriter = Json.createWriter(stWriter)) {
-            jsonWriter.writeObject(model);
-        }
-        String jsonData = stWriter.toString();
-
-        Future<Response> response = getConnectionFactory().target(graphURL)
-                .request()
-                .header("Host", graphServer)
-                .header("Accept", "application/json, text/plain, */*")
-                .header("Content-Type", "application/json")
-                .header("api-version", "1.6")
-                .header("Authorization", authString).async()
-                .post(Entity.json(jsonData));
-
-        try {
-            ADUserMemberOfGroups memberOfGrups;
-            memberOfGrups = response.get().readEntity(ADUserMemberOfGroups.class);
-            LOGGER.log(Level.INFO, memberOfGrups.toString());
-            return memberOfGrups.getValue();
-        } catch (InterruptedException | ExecutionException ex) {
-            Logger.getLogger(AzureADServerAuthModule.class.getName()).log(Level.SEVERE, null, ex);
-            return null;
-        }
+    private String[] getGroupList(HttpServletRequest request, AzureADUserPrincipal userPrincipal) {
+        return getGraphAPIImpl(request).getMemberOfGroup(userPrincipal.getName()).getValue();
+//        return graph.getMemberOfGroup(userPrincipal.getName()).getValue();
     }
-
 
     /* リフレッシュ・トークンからアクセス・トークンの取得  */
     private AuthenticationResult getAccessTokenFromRefreshToken(

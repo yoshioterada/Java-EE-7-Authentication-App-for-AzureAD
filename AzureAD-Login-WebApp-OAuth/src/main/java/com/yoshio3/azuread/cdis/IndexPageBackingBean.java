@@ -26,13 +26,13 @@ import java.util.Arrays;
 import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.PermitAll;
+import javax.annotation.security.RolesAllowed;
+import javax.faces.context.ExternalContext;
 import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
 import org.primefaces.event.SelectEvent;
 
 /**
@@ -46,6 +46,10 @@ public class IndexPageBackingBean implements Serializable {
 
     private UserSelectionModel selectionModel;
     private GroupSelectionModel groupSelectionModel;
+
+    private String role;
+
+    private boolean admin;
 
     @Inject
     private GraphAPIImpl graph;
@@ -61,15 +65,13 @@ public class IndexPageBackingBean implements Serializable {
 
     private String[] memberOfGroup;
 
+    private String nameAndAddress;
+
     @PostConstruct
     public void init() {
         List<ADUser> data = Arrays.asList(graph.getAllADUserFromGraph().getValue());
         selectionModel = new UserSelectionModel(data);
 
-        /////TEST//// まだユーザ・プリンシパルや Subject が取れない
-//        final HttpSession session = (HttpSession) FacesContext.getCurrentInstance().getExternalContext().getSession(false);
-//        Subject subject = (Subject) session.getAttribute("saved_subject");
-//        subject.getPrincipals().forEach(princ -> System.out.println(princ));
         Principal userPrincipal = ((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest()).getUserPrincipal();
         System.out.println("ユーザ・プリンシパル：" + userPrincipal);
     }
@@ -222,5 +224,62 @@ public class IndexPageBackingBean implements Serializable {
      */
     public void setMemberOfGroup(String[] memberOfGroup) {
         this.memberOfGroup = memberOfGroup;
+    }
+
+    /**
+     * @return the role
+     */
+    public String getRole() {
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        if (externalContext.isUserInRole("admin")) {
+            return "私は管理者です";
+        } else if (externalContext.isUserInRole("standard")) {
+            return "私は一般ユーザです";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * @param role the role to set
+     */
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    /**
+     * @return the nameAndAddress
+     */
+    public String getNameAndAddress() {
+        Principal userPrincipal = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+        String uid = userPrincipal.getName();
+        ADUser adUserFromGraph = graph.getADUserFromGraph(uid);
+        return adUserFromGraph.getDisplayName() + " : " + adUserFromGraph.getUserPrincipalName() + " でログインしています。";
+    }
+
+    /**
+     * @param nameAndAddress the nameAndAddress to set
+     */
+    public void setNameAndAddress(String nameAndAddress) {
+        this.nameAndAddress = nameAndAddress;
+    }
+
+    /**
+     * @return the admin
+     */
+    public boolean isAdmin() {
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        return externalContext.isUserInRole("admin");
+    }
+
+    public String nextPage() {
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        if(externalContext.isUserInRole("admin")){
+            return "nextAdmin";
+        }else if(externalContext.isUserInRole("standard")){
+            return "nextStandard";
+        }else{
+            return "";
+        }
     }
 }

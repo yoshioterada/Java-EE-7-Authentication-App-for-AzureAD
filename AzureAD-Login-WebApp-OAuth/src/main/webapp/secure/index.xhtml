@@ -18,7 +18,7 @@
             <h:form id="form">
                 <p:layout fullPage="true">
                     <p:layoutUnit position="north" size="100" resizable="true" closable="true" collapsible="true">
-                        <H3>Azure AD 情報取得画面</H3>
+                        <H3>Azure AD 情報取得画面 : #{indexPage.role}</H3>
                         <h:outputLink value="http://myapps.microsoft.com" >SSO 用のアクセス・パネルへ</h:outputLink>
                     </p:layoutUnit>
 
@@ -36,7 +36,7 @@
                         <h:panelGroup layout="block" id="usertable" >
                             <p:dataTable id="utbl" var="user" selectionMode="single" paginator="true"
                                          paginatorPosition="bottom" value="#{indexPage.selectionModel}" rows="5" 
-                                         selection="#{indexPage.selectedUser}" rowKey="#{user.objectId}">
+                                         selection="#{indexPage.selectedUser}" rowKey="#{user.objectId}" rendered="#{indexPage.admin}">
                                 <p:ajax event="rowSelect" listener="#{indexPage.onUserRowSelect}" update="form:specificUser" />
                                 <p:column headerText="表示名">
                                     <h:outputText value="#{user.displayName}" />
@@ -49,7 +49,7 @@
                                 </p:column>
                             </p:dataTable>                            
                             <h:panelGroup layout="block" id="specificUser">
-                                <h:panelGrid columns="2" cellpadding="5">
+                                <h:panelGrid columns="2" cellpadding="5" rendered="#{indexPage.admin}">
                                     <h:outputLabel for="displayName" value="表示名:" />
                                     <h:outputText id="displayName" value="#{indexPage.user.displayName}"/>
 
@@ -86,16 +86,16 @@
                             <p:dataTable var="group" selectionMode="single" paginator="true"
                                          paginatorPosition="bottom" rows="5" 
                                          value="#{indexPage.groupSelectionModel}"
-                                         selection="#{indexPage.selectedGroup}" rowKey="#{group.objectId}" > 
+                                         selection="#{indexPage.selectedGroup}" rowKey="#{group.objectId}" rendered="#{indexPage.admin}"> 
                                 <p:ajax event="rowSelect" listener="#{indexPage.onGroupRowSelect}" update="form:grouptable" />     
                                 <p:column headerText="グループ名">
                                     <h:outputText value="#{group.displayName}"/>
                                 </p:column>
-                                <p:column headerText="オブジェクト ID">
+                                <p:column headerText="グループ ID">
                                     <h:outputText value="#{group.objectId}"/>
                                 </p:column>
                             </p:dataTable>
-                            <p:dataTable var="usersingroup" value="#{indexPage.users}">
+                            <p:dataTable var="usersingroup" value="#{indexPage.users}" rendered="#{indexPage.admin}">
                                 <p:column headerText="グループ所属メンバー">
                                     <h:outputText value="#{usersingroup.displayName}"/>
                                 </p:column>
