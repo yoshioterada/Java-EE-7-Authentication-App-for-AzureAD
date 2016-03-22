@@ -15,11 +15,11 @@
  */
 package com.yoshio3.jaspic;
 
-
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
 import com.nimbusds.oauth2.sdk.AuthorizationCode;
+import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.openid.connect.sdk.AuthenticationErrorResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponse;
 import com.nimbusds.openid.connect.sdk.AuthenticationResponseParser;
@@ -28,9 +28,9 @@ import com.yoshio3.azuread.graph.GraphAPIImpl;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.security.Principal;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -58,17 +58,16 @@ import javax.security.auth.message.module.ServerAuthModule;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-
 /**
  *
  * @author Yoshio Terada
  */
 public class AzureADServerAuthModule implements ServerAuthModule {
 
-    public AzureADServerAuthModule(Map<String, String> options){
+    public AzureADServerAuthModule(Map<String, String> options) {
         this.options = options;
     }
-    
+
     private static final Logger LOGGER = Logger.getLogger(AzureADServerAuthModule.class.getName());
 
     public final static String ERROR = "error";
@@ -80,13 +79,13 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     private static final String SAVED_SUBJECT = "saved_subject";
     public static final String PRINCIPAL_SESSION_NAME = "principal";
 
+    /* web.xml で記載した設定情報の取得 */
     private String authority = "";
     private String tenant = "";
     private String clientId = "";
     private String secretKey = "";
     private String graphServer = "";
     private String logContext = "";
-//    private final static String LOGIN_CONTEXT_NAME = "AzureAD-Login"; //login.conf に記載する名前
 
     static final String AUTHORIZATION_HEADER = "authorization";
 
@@ -137,8 +136,8 @@ public class AzureADServerAuthModule implements ServerAuthModule {
         if (options.containsKey("graph_server")) {
             graphServer = (String) options.get("graph_server");
         }
-        if (options.containsKey("javax.security.auth.login.LoginContext")){
-            logContext = (String)options.get("javax.security.auth.login.LoginContext");
+        if (options.containsKey("javax.security.auth.login.LoginContext")) {
+            logContext = (String) options.get("javax.security.auth.login.LoginContext");
         }
     }
 
@@ -151,7 +150,6 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
         HttpServletRequest httpRequest = (HttpServletRequest) messageInfo.getRequestMessage();
         HttpServletResponse httpResponse = (HttpServletResponse) messageInfo.getResponseMessage();
-
         Callback[] callbacks;
 
         //Azure AD の認証後、リダイレクトで返ってきた場合
@@ -161,26 +159,38 @@ public class AzureADServerAuthModule implements ServerAuthModule {
             params.put(key, httpRequest.getParameterMap().get(key)[0]);
         });
         String currentUri = getCurrentUri(httpRequest);
+        try {
+            //セッション情報に認証結果が含まれない場合        
+            if (!getSessionPrincipal(httpRequest)) {
+                if (!isRedirectedRequestFromAuthServer(httpRequest, params)) {
+                    // 最初のリクエストの場合は Azure AD に Redirect 
+                    redirectOpenIDServer(httpResponse, currentUri);
+                    return AuthStatus.SEND_CONTINUE;
 
-        //セッション情報に認証結果が含まれない場合        
-        if (!getSessionPrincipal(httpRequest)) {
-            if (!isRedirectedRequestFromAuthServer(httpRequest, params)) {
-                try {
-                    // Azure AD に Redirect 
-                    return redirectOpenIDServer(httpResponse, currentUri);
-                } catch (IOException ex) {
-                    LOGGER.log(Level.SEVERE, "Invalid redirect URL", ex);
-                    return AuthStatus.SEND_FAILURE;
+                } else {
+                    // 認証結果が含まれず Azure AD から返ってきたリクエストの場合
+                    messageInfo.getMap().put("javax.servlet.http.registerSession", Boolean.TRUE.toString());
+                    messageInfo.getMap().put("javax.servlet.http.authType", "AzureADServerAuthModule");
+                    String fullUrl = currentUri
+                            + (httpRequest.getQueryString() != null ? "?"
+                                    + httpRequest.getQueryString() : "");
+                    AuthenticationResponse authResponse = AuthenticationResponseParser.parse(new URI(fullUrl), params);
+                    //params の中に error が含まれている場合、AuthenticationErrorResponse
+                    //成功の場合 AuthenticationSuccessResponse が返る
+                    if (authResponse instanceof AuthenticationSuccessResponse) {
+                        //認証に成功した場合
+                        //リダイレクトされ code, id_token などが含まれる場合
+                        //この時、認証結果をセッションに保存
+                        onAuthenticationSuccess(httpRequest, authResponse, clientSubject, currentUri);
+                        return AuthStatus.SUCCESS;
+                    } else {
+                        //認証に失敗した場合
+                        onAuthenticationFailer(authResponse, clientSubject);
+                        return AuthStatus.SEND_FAILURE;
+                    }
                 }
             } else {
-                // Azure AD から返ってきたリクエストの場合
-                messageInfo.getMap().put("javax.servlet.http.registerSession", Boolean.TRUE.toString());
-                messageInfo.getMap().put("javax.servlet.http.authType", "AzureADServerAuthModule");
-                return getAuthResultFromServerAndSetSession(clientSubject, httpRequest, params, currentUri);
-            }
-        } else {
-            try {
-                //セッション情報に認証結果が含まれる場合
+                //セッション情報に認証結果が含まれる場合・アクセス・トークンの期限をチェック
                 AzureADUserPrincipal sessionPrincipal = (AzureADUserPrincipal) httpRequest.getUserPrincipal();
                 AuthenticationResult authenticationResult = sessionPrincipal.getAuthenticationResult();
                 if (authenticationResult.getExpiresOnDate().before(new Date())) {
@@ -189,17 +199,20 @@ public class AzureADServerAuthModule implements ServerAuthModule {
                             authenticationResult.getRefreshToken(), currentUri);
                     setSessionPrincipal(httpRequest, new AzureADUserPrincipal(authResult));
                 }
+                // ユーザ・プリンシパル、グループ情報を CallBack Handler で受け渡し
                 CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, sessionPrincipal);
-                String[] groups = getGroupList(httpRequest,sessionPrincipal);
+                String[] groups = getGroupList(httpRequest, sessionPrincipal);
                 GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, groups);
-
                 callbacks = new Callback[]{callerCallBack, groupPrincipalCallback};
                 handler.handle(callbacks);
                 return AuthStatus.SUCCESS;
-            } catch (Throwable ex) {
-                LOGGER.log(Level.SEVERE, "Invalid Session Info", ex);
-                return AuthStatus.SEND_FAILURE;
             }
+        } catch (URISyntaxException | IOException | ParseException | UnsupportedCallbackException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+            return AuthStatus.SEND_FAILURE;
+        } catch (Throwable ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+            return AuthStatus.SEND_FAILURE;
         }
     }
 
@@ -220,94 +233,52 @@ public class AzureADServerAuthModule implements ServerAuthModule {
         }
     }
 
-    /* ステップ１ 認証されていな最初のリクエストの場合 */
-    private AuthStatus redirectOpenIDServer(HttpServletResponse httpResponse, String currentUri) throws UnsupportedEncodingException, IOException {
+    /* 認証されていな最初のリクエストの場合 Azure AD にリダイレクト*/
+    private void redirectOpenIDServer(HttpServletResponse httpResponse, String currentUri) throws UnsupportedEncodingException, IOException {
         //認証しておらず、認証データを持っていない場合
         // 認証していない場合は Azure AD の認証画面にリダイレクト
         String redirectUrl = getRedirectUrl(currentUri);
         httpResponse.setStatus(302);
         httpResponse.sendRedirect(getRedirectUrl(currentUri));
-        return AuthStatus.SEND_CONTINUE;
     }
 
-    /* ステップ２ リダイレクトされ code, id_token などが含まれる場合
-       この時、認証結果をセッションに保存
-     */
-    private AuthStatus getAuthResultFromServerAndSetSession(Subject clientSubject, HttpServletRequest httpRequest, Map<String, String> params, String currentUri) {
-        try {
-            String fullUrl = currentUri
-                    + (httpRequest.getQueryString() != null ? "?"
-                            + httpRequest.getQueryString() : "");
-            AuthenticationResponse authResponse = AuthenticationResponseParser
-                    .parse(new URI(fullUrl), params);
-            //params の中に error が含まれている場合、AuthenticationErrorResponse
-            //成功の場合 AuthenticationSuccessResponse が返る
+    /* 認証に成功した場合、ユーザ・プリンシパル、グループ情報を設定し call back で情報の受け渡し */
+    private void onAuthenticationSuccess(HttpServletRequest httpRequest, AuthenticationResponse authResponse, Subject clientSubject, String currentUri) throws Throwable {
+        //レスポンスから結果を取得しセッションに保存
+        AuthenticationSuccessResponse authSuccessResponse = (AuthenticationSuccessResponse) authResponse;
+        AuthenticationResult result = getAccessToken(authSuccessResponse.getAuthorizationCode(), currentUri);
+        AzureADUserPrincipal userPrincipal = new AzureADUserPrincipal(result);
+        setSessionPrincipal(httpRequest, userPrincipal);
 
-            //認証に成功した場合
-            if (authResponse instanceof AuthenticationSuccessResponse) {
-                //レスポンスから結果を取得しセッションに保存
-                AuthenticationSuccessResponse authSuccessResponse = (AuthenticationSuccessResponse) authResponse;
-                AuthenticationResult result = getAccessToken(authSuccessResponse.getAuthorizationCode(), currentUri);
-                AzureADUserPrincipal userPrincipal = new AzureADUserPrincipal(result);
-                setSessionPrincipal(httpRequest, userPrincipal);
+        //ユーザ・プリンシパルの設定 //
+        String[] groups = getGroupList(httpRequest, userPrincipal);
+        AzureADCallbackHandler azureCallBackHandler = new AzureADCallbackHandler(clientSubject, httpRequest, userPrincipal);
+        loginContext = new LoginContext(logContext, azureCallBackHandler);
+        loginContext.login();
+        Subject subject = loginContext.getSubject();
 
-                //ユーザ・プリンシパルの設定 //
-                String[] groups = getGroupList(httpRequest,userPrincipal);
-                System.out.println("グループ: " + Arrays.toString(groups));
-                AzureADCallbackHandler azureCallBackHandler = new AzureADCallbackHandler(clientSubject, httpRequest, userPrincipal);
-                loginContext = new LoginContext(logContext, azureCallBackHandler);
-                loginContext.login();
-                Subject subject = loginContext.getSubject();
+        CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, userPrincipal);
+        GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, groups);
+        Callback[] callbacks = new Callback[]{callerCallBack, groupPrincipalCallback};
+        handler.handle(callbacks);
 
-                CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, userPrincipal);
-                GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, groups);
-
-                Callback[] callbacks = new Callback[]{callerCallBack, groupPrincipalCallback};
-                handler.handle(callbacks);
-
-                return AuthStatus.SUCCESS;
-            } else {
-                // 認証に失敗した場合
-                AuthenticationErrorResponse authErrorResponse = (AuthenticationErrorResponse) authResponse;
-                CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, (Principal) null);
-                GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, null);
-
-                Callback[] callbacks = new Callback[]{callerCallBack, groupPrincipalCallback};
-                handler.handle(callbacks);
-
-                return AuthStatus.FAILURE;
-            }
-        } catch (Throwable ex) {
-            CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, (Principal) null);
-            GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, null);
-
-            Callback[] callbacks = new Callback[]{callerCallBack, groupPrincipalCallback};
-            try {
-                handler.handle(callbacks);
-            } catch (IOException | UnsupportedCallbackException ex1) {
-                LOGGER.log(Level.SEVERE, null, ex1);
-            }
-            LOGGER.log(Level.SEVERE, null, ex);
-            return AuthStatus.FAILURE;
-        }
     }
 
-   
-    private static GraphAPIImpl graph;
-    
-    private GraphAPIImpl getGraphAPIImpl(HttpServletRequest request){
-        if(graph == null){
-            graph = new GraphAPIImpl();
-            graph.init(request);
-            return graph;
-        }else{
-            return graph;
-        }
+    /* 認証に失敗した場合、ユーザ・プリンシパル、グループ情報は null */
+    private void onAuthenticationFailer(AuthenticationResponse authResponse, Subject clientSubject) throws IOException, UnsupportedCallbackException {
+        // 認証に失敗した場合
+        AuthenticationErrorResponse authErrorResponse = (AuthenticationErrorResponse) authResponse;
+        CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, (Principal) null);
+        GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, null);
+
+        Callback[] callbacks = new Callback[]{callerCallBack, groupPrincipalCallback};
+        handler.handle(callbacks);
     }
-    
 
     private String[] getGroupList(HttpServletRequest request, AzureADUserPrincipal userPrincipal) {
-        return getGraphAPIImpl(request).getMemberOfGroup(userPrincipal.getName()).getValue();
+        GraphAPIImpl graph = new GraphAPIImpl();
+        graph.init(request);
+        return graph.getMemberOfGroup(userPrincipal.getName()).getValue();
 //        return graph.getMemberOfGroup(userPrincipal.getName()).getValue();
     }
 
@@ -385,19 +356,6 @@ public class AzureADServerAuthModule implements ServerAuthModule {
 //        return (AzureADUserPrincipal) request.getSession().getAttribute(PRINCIPAL_SESSION_NAME);
     }
 
-    private void setSessionSubject(HttpServletRequest httpRequest, final Subject clientSubject) {
-        if (clientSubject == null) {
-            return;
-        }
-        httpRequest.getSession().setAttribute(SAVED_SUBJECT, clientSubject);
-        LOGGER.log(Level.FINE, "Saved subject {0}", clientSubject);
-    }
-
-    private Subject getSessionSubject(HttpServletRequest httpRequest) {
-        return (Subject) httpRequest.getSession().getAttribute(SAVED_SUBJECT);
-    }
-
-
     /* リダイレクト URL の取得 */
     private String getRedirectUrl(String currentUri)
             throws UnsupportedEncodingException {
@@ -421,8 +379,6 @@ public class AzureADServerAuthModule implements ServerAuthModule {
 
     /* 認証データが含まれるか否かのチェック */
     public boolean containsAuthenticationData(HttpServletRequest httpRequest) {
-//        System.out.println("containsAuthenticationData プリンシパル名：" + httpRequest.getUserPrincipal().getName());
-
         Map<String, String[]> map = httpRequest.getParameterMap();
 
         return httpRequest.getMethod().equalsIgnoreCase("POST")

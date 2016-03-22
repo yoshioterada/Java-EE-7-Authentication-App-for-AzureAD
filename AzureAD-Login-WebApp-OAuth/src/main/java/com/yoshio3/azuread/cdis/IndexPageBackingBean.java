@@ -72,7 +72,6 @@ public class IndexPageBackingBean implements Serializable {
         selectionModel = new UserSelectionModel(data);
 
         Principal userPrincipal = ((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest()).getUserPrincipal();
-        System.out.println("ユーザ・プリンシパル：" + userPrincipal);
     }
 
     public void pushGetUsersInfo() {

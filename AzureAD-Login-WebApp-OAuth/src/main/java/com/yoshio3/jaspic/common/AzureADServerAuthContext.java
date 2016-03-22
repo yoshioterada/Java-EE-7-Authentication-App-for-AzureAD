@@ -15,7 +15,6 @@
  */
 package com.yoshio3.jaspic.common;
 
-import java.util.Collections;
 import java.util.Map;
 import javax.security.auth.Subject;
 import javax.security.auth.callback.CallbackHandler;

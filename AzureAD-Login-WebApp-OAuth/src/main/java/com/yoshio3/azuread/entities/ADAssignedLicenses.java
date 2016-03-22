@@ -15,6 +15,7 @@
 */
 package com.yoshio3.azuread.entities;
 
+import java.util.Arrays;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -56,6 +57,6 @@ public class ADAssignedLicenses {
 
     @Override
     public String toString() {
-        return "ADAssignedLicenses{" + "disabledPlans=" + disabledPlans + ", skuId=" + skuId + '}';
+        return "ADAssignedLicenses{" + "disabledPlans=" + Arrays.toString(disabledPlans) + ", skuId=" + skuId + '}';
     }
 }

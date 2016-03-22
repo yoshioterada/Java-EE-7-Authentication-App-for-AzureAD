@@ -67,14 +67,6 @@ public class AzureADServerAuthConfig implements ServerAuthConfig {
         return layer;
     }
 
-    /**
-     * It's not entirely clear what the difference is between the "application
-     * context identifier" (appContext) and the "authentication context
-     * identifier" (authContext). In early iterations of the specification,
-     * authContext was called "operation" and instead of the MessageInfo it was
-     * obtained by something called an "authParam".
-     */
-
     @Override
     public String getAuthContextID(MessageInfo messageInfo) {
         return appContext;

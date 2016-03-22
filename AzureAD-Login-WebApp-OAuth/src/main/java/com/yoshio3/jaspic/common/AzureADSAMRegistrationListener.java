@@ -47,7 +47,7 @@ public class AzureADSAMRegistrationListener implements ServletContextListener {
         registerSAM(context, azureADServerAuthModule,azureADServerAuthModule.getRequestPolicy(),azureADServerAuthModule.getResponsePolicy(),azureADServerAuthModule.getOptions());
     }    
 
-    /* 通常コンテナで設定する内容をプログラム内で記載 ServerAuthModule のoptionsに設定する内容*/
+    /* 通常コンテナで設定する内容をプログラム内(web.xml)で記載 ServerAuthModule のoptionsに設定する内容*/
     private Map<String,String> getInitParameter(ServletContext context){
         String clientId = context.getInitParameter(CLIENT_ID);
         String authority =context.getInitParameter(AUTHORITY);

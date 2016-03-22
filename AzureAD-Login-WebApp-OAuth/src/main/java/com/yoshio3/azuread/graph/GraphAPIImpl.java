@@ -72,12 +72,7 @@ public class GraphAPIImpl implements Serializable {
     @PostConstruct
     public void init() {
         HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-//        AzureADUserPrincipal userPrincipal = (AzureADUserPrincipal)request.getUserPrincipal();
-//        AuthenticationResult authResult = userPrincipal.getAuthenticationResult();
-//        System.out.println("GRAPH API Aceess Token : " + authResult.getAccessToken());
-
         AzureADUserPrincipal userPrincipal = (AzureADUserPrincipal) request.getSession().getAttribute(PRINCIPAL_SESSION_NAME);
-        System.out.println("UserPrincipal Access Token:" + userPrincipal.getAuthenticationResult().getAccessToken());
 
         authString = "Bearer " + userPrincipal.getAuthenticationResult().getAccessToken();
         tenant = request.getServletContext().getInitParameter("tenant");
@@ -90,7 +85,6 @@ public class GraphAPIImpl implements Serializable {
 
     public void init(HttpServletRequest request) {
         AzureADUserPrincipal userPrincipal = (AzureADUserPrincipal) request.getSession().getAttribute(PRINCIPAL_SESSION_NAME);
-        System.out.println("UserPrincipal Access Token:" + userPrincipal.getAuthenticationResult().getAccessToken());
 
         authString = "Bearer " + userPrincipal.getAuthenticationResult().getAccessToken();
         tenant = request.getServletContext().getInitParameter("tenant");
@@ -104,8 +98,6 @@ public class GraphAPIImpl implements Serializable {
     /* 登録済みの全ユーザ取得 */
     public ADUsers getAllADUserFromGraph() {
         String graphURL = String.format("https://%s/%s/users", GRAPH_SEVER, tenant);
-
-        System.out.println("DEBUG:" + graphURL);
 
         ADUsers users = jaxrsClient.target(graphURL)
                 .request()
