@@ -74,10 +74,11 @@ public class IndexPageBackingBean implements Serializable {
         Principal userPrincipal = ((HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest()).getUserPrincipal();
     }
 
+    /* ユーザ一覧の取得 */
     public void pushGetUsersInfo() {
         selectionModel = getSelectionModel();
     }
-
+    /* グループ一覧の取得 */
     public void pushGetGroupsInfo() {
         if (groupSelectionModel == null) {
             List<ADGroup> data = Arrays.asList(graph.getAllADGroupFromGraph().getValue());
@@ -86,18 +87,56 @@ public class IndexPageBackingBean implements Serializable {
             groupSelectionModel = getGroupSelectionModel();
         }
     }
-
+    /* 特定ユーザの詳細情報の取得 */
     public void onUserRowSelect(SelectEvent event) {
         String id = ((ADUser) event.getObject()).getObjectId();
         user = graph.getADUserFromGraph(id);
         memberOfGroup = graph.getMemberOfGroup(id).getValue();
     }
-
+    /* 特定グループに含まれるユーザ情報の取得 */
     public void onGroupRowSelect(SelectEvent event) {
         String groupid = ((ADGroup) event.getObject()).getObjectId();
         users = graph.getAllUsersInGroup(groupid).getValue();
     }
 
+    /*
+     * Admin 権限の有無のチェック
+     */
+    public boolean isAdmin() {
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        return externalContext.isUserInRole("admin");
+    }
+    /*
+     * ユーザが持つ権限に応じた処理例
+     */
+    public String nextPage() {        
+        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+        if (externalContext.isUserInRole("admin")) {
+            return "nextAdmin";
+        } else if (externalContext.isUserInRole("standard")) {
+            return "nextStandard";
+        } else {
+            return "";
+        }
+    }
+
+    /**
+     * @return ユーザのメールアドレスと所属グループの取得
+     */
+    public String getNameAndAddress() {
+        Principal userPrincipal = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
+        String uid = userPrincipal.getName();
+        ADUser adUserFromGraph = graph.getADUserFromGraph(uid);
+        return adUserFromGraph.getDisplayName() + " : " + adUserFromGraph.getUserPrincipalName() + " でログインしています。";
+    }
+
+    /**********  以降は単なるセッタ・ゲッタ  Lombok の導入でセッタ・ゲッタは省略可 *******************/
+    /**
+     * @param nameAndAddress the nameAndAddress to set
+     */
+    public void setNameAndAddress(String nameAndAddress) {
+        this.nameAndAddress = nameAndAddress;
+    }
     /**
      * @return the selectionModel
      */
@@ -243,41 +282,5 @@ public class IndexPageBackingBean implements Serializable {
      */
     public void setRole(String role) {
         this.role = role;
-    }
-
-    /**
-     * @return the nameAndAddress
-     */
-    public String getNameAndAddress() {
-        Principal userPrincipal = FacesContext.getCurrentInstance().getExternalContext().getUserPrincipal();
-        String uid = userPrincipal.getName();
-        ADUser adUserFromGraph = graph.getADUserFromGraph(uid);
-        return adUserFromGraph.getDisplayName() + " : " + adUserFromGraph.getUserPrincipalName() + " でログインしています。";
-    }
-
-    /**
-     * @param nameAndAddress the nameAndAddress to set
-     */
-    public void setNameAndAddress(String nameAndAddress) {
-        this.nameAndAddress = nameAndAddress;
-    }
-
-    /**
-     * @return the admin
-     */
-    public boolean isAdmin() {
-        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        return externalContext.isUserInRole("admin");
-    }
-
-    public String nextPage() {        
-        ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
-        if (externalContext.isUserInRole("admin")) {
-            return "nextAdmin";
-        } else if (externalContext.isUserInRole("standard")) {
-            return "nextStandard";
-        } else {
-            return "";
-        }
     }
 }

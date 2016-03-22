@@ -146,6 +146,13 @@ public class AzureADServerAuthModule implements ServerAuthModule {
         return SUPPORTED_MESSAGE_TYPE;
     }
 
+    /*
+    参考：
+    https://github.com/javaee-samples/javaee7-samples/blob/master/jaspic/custom-principal/src/main/java/org/javaee7/jaspic/customprincipal/sam/TestServerAuthModule.java
+    Communicate the details of the authenticated user to the container. In many
+    cases the handler will just store the details and the container will actually handle
+    the login after we return from this method.
+     */
     @Override
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject) throws AuthException {
         HttpServletRequest httpRequest = (HttpServletRequest) messageInfo.getRequestMessage();
