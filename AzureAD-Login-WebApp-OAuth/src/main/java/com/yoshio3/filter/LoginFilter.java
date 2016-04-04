@@ -70,6 +70,8 @@ public class LoginFilter implements Filter {
     private String secretKey = "";
 
     /* これらの情報は web.xml の設定情報に AD の管理画面から取得した情報を設定
+    /* これらのじょうほうは web.xml のせっていじょうほうに AD のかんりがめんからしゅとくしたじょうほうをせってい
+    /* Set the following configuration in the web.xml file to the values you can obtain from the AD administration screen
     <context-param>
         <param-name>authority</param-name>
         <param-value>https://login.microsoftonline.com/</param-value>
@@ -107,6 +109,7 @@ public class LoginFilter implements Filter {
             FilterChain chain) throws IOException, ServletException {
 
         //リクエストが HttpServletRequest の場合
+        // if the request is an HttpServletRequest
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             HttpServletResponse httpResponse = (HttpServletResponse) response;
@@ -118,11 +121,16 @@ public class LoginFilter implements Filter {
                                 + httpRequest.getQueryString() : "");
 
                 // ユーザが認証済みのセッションを保持しているかチェック
+                // ユーザがにんしょうずみのセッションをほじしているかチェック
+                // Check whether the user has an authenticated session
                 // セッションにプリンシパル情報が入っていれば認証済みと判断
+                // TODO translate
                 if (!isAuthenticated(httpRequest)) {
                     if (!containsAuthenticationData(httpRequest)) {
                         //認証しておらず、認証データを持っていない場合
+                        // if not authenticated and without authentication data
                         // 認証していない場合は Azure AD の認証画面にリダイレクト
+                        // if it's not authenticated, redirect to AD's authentication screen
                         String redirectUrl = getRedirectUrl(currentUri);
                         
                         httpResponse.setStatus(302);
@@ -131,7 +139,9 @@ public class LoginFilter implements Filter {
                         return;
                     } else {
                         //Azure AD の認証後、リダイレクトで返ってきた場合
+                        // if returned here after a redirect following authentication
                         //プリンシパル情報はないので、認証に成功している場合、プリンシパルに追加
+                        // because there is no principal information, if authenticated successfully add a principal
                         Map<String, String> params = new HashMap<>();
                         request.getParameterMap().keySet().stream().forEach(key -> {
                             params.put(key,
@@ -142,8 +152,11 @@ public class LoginFilter implements Filter {
                                 .parse(new URI(fullUrl), params);
                         //params の中に error が含まれている場合、AuthenticationErrorResponse
                         //成功の場合 AuthenticationSuccessResponse が返る
+                        // if in params there is an error, return AuthenticationErrorResponse
+                        // if successful, return AuthenticationSuccessResponse
 
                         //認証に成功した場合
+                        // if authentication succeeded
                         if (authResponse instanceof AuthenticationSuccessResponse) {
                             AuthenticationSuccessResponse authSuccessResponse = (AuthenticationSuccessResponse) authResponse;
 
@@ -154,6 +167,7 @@ public class LoginFilter implements Filter {
                             createSessionPrincipal(httpRequest, result);
                         } else {
                             // 認証に失敗した場合
+                            // if authentication failed
                             AuthenticationErrorResponse authErrorResponse = (AuthenticationErrorResponse) authResponse;
                             throw new Exception(String.format(
                                     "Request for auth code failed: %s - %s",
@@ -164,15 +178,19 @@ public class LoginFilter implements Filter {
                     }
                 } else {
                     //既に認証済みの場合、セッションから認証結果情報を取得
+                    //すでににんしょうずみのばあい、セッションからにんしょうけっかじょうほうをしゅとく
+                    // if already authenticated, get info on the authentication result from the session
                     AuthenticationResult result
                             = getAuthSessionObject(httpRequest);
 
                     if (result.getExpiresOnDate().before(new Date())) {
                         //認証の日付が古い場合・リフレッシュトークンからアクセストークン取得
+                        // if the authentication date is old, get an access token from the refresh token
                         result = getAccessTokenFromRefreshToken(
                                 result.getRefreshToken(), currentUri);
                     }
                     // セッションにプリンシパルの情報を設定
+                    // set principal information in the session
                     createSessionPrincipal(httpRequest, result);
                 }
             } catch (Throwable exc) {
@@ -186,6 +204,7 @@ public class LoginFilter implements Filter {
     }
 
     /* クライアントのクレデンシャルからアクセス・トークンを取得*/
+    /* get the access token from the client credentials */
     private AuthenticationResult getAccessTokenFromClientCredentials()
             throws Throwable {
         AuthenticationContext context;
@@ -215,6 +234,7 @@ public class LoginFilter implements Filter {
     }
 
     /* リフレッシュ・トークンからアクセス・トークンの取得  */
+    /* get the access token from the refresh token */
     private AuthenticationResult getAccessTokenFromRefreshToken(
             String refreshToken, String currentUri) throws Throwable {
         AuthenticationContext context;
@@ -245,6 +265,7 @@ public class LoginFilter implements Filter {
     }
 
     /* アクセス・トークンの取得*/
+    /* get the access token */
     private AuthenticationResult getAccessToken(
             AuthorizationCode authorizationCode, String currentUri)
             throws Throwable {
@@ -277,12 +298,14 @@ public class LoginFilter implements Filter {
     }
 
     /* 認証済みのセッションを作成 */
+    /* prepare an authenticated session */
     private void createSessionPrincipal(HttpServletRequest httpRequest,
             AuthenticationResult result) throws Exception {
         httpRequest.getSession().setAttribute(PRINCIPAL_SESSION_NAME, result);
     }
 
     /* リダイレクト URL の取得 */
+    /* get the redirect URL */
     private String getRedirectUrl(String currentUri)
             throws UnsupportedEncodingException {
         String redirectUrl = authority
@@ -295,17 +318,22 @@ public class LoginFilter implements Filter {
     }
 
     /* HTTP セッションから認証済みか否かのチェック */
+    /* HTTP セッションからにんしょうずみかいなかのチェック */
+    /* check whether the HTTP session is authenticated or not */
     public boolean isAuthenticated(HttpServletRequest request) {
         return request.getSession().getAttribute(PRINCIPAL_SESSION_NAME) != null;
     }
 
     /* HTTP セッションから認証結果の取得 */
+    /* get the authentication result from the HTTP session */
     public  AuthenticationResult getAuthSessionObject(HttpServletRequest request) {
         return (AuthenticationResult) request.getSession().getAttribute(
                 PRINCIPAL_SESSION_NAME);
     }
 
     /* 認証データが含まれるか否かのチェック */
+    /* にんしょうデータがふくまれるかいなかのチェック */
+    /* check whether authentication data is included or not */
     public  boolean containsAuthenticationData(HttpServletRequest httpRequest) {
         Map<String, String[]> map = httpRequest.getParameterMap();
 
@@ -317,6 +345,7 @@ public class LoginFilter implements Filter {
 
 
     /* リクエストの URI を取得 */
+    /* get the request URI */
     private String getCurrentUri(HttpServletRequest request) {
         String scheme = request.getScheme();
         int serverPort = request.getServerPort();

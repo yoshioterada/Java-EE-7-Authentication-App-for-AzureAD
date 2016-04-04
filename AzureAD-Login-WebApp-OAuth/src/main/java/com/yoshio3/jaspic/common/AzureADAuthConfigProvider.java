@@ -88,8 +88,8 @@ public class AzureADAuthConfigProvider implements AuthConfigProvider {
 
     /**
      * Creates a default callback handler via the system property "authconfigprovider.client.callbackhandler", as seemingly
-     * required by the API (API uses wording "may" create default handler). TODO: Isn't
-     * "authconfigprovider.client.callbackhandler" JBoss specific?
+     * required by the API (API uses wording "may" create default handler).
+     * TODO: Isn't "authconfigprovider.client.callbackhandler" JBoss specific?
      * 
      * @return
      * @throws AuthException
@@ -97,6 +97,7 @@ public class AzureADAuthConfigProvider implements AuthConfigProvider {
 
     private CallbackHandler createDefaultCallbackHandler() throws AuthException {
         //TODO web.xml 経由で取得するのがベター
+        //TODO better to obtain this via web.xml
         String callBackClassName = "com.yoshio3.jaspic.AzureADCallbackHandler";
 
         if (callBackClassName == null) {

@@ -96,7 +96,9 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     private String clientId = "";
     private String secretKey = "";
     private String graphServer = "";
-    private final static String LOGIN_CONTEXT_NAME = "AzureAD-Login"; //login.conf に記載する名前
+    private final static String LOGIN_CONTEXT_NAME = "AzureAD-Login";   //login.conf に記載する名前
+                                                                        //login.conf にきさいするなまえ
+                                                                        // the name mentioned in login.conf
 
     static final String AUTHORIZATION_HEADER = "authorization";
 
@@ -348,6 +350,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
 
 
     /* リフレッシュ・トークンからアクセス・トークンの取得  */
+    /* get the access token from the refresh token */
     private AuthenticationResult getAccessTokenFromRefreshToken(
             String refreshToken, String currentUri) throws Throwable {
         AuthenticationContext context;
@@ -378,6 +381,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     }
 
     /* アクセス・トークンの取得*/
+    /* get the access token */
     private AuthenticationResult getAccessToken(
             AuthorizationCode authorizationCode, String currentUri)
             throws Throwable {
@@ -410,12 +414,14 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     }
 
     /* HTTP セッションに認証情報を設定 */
+    /* set authentication information in the session */
     private void setSessionPrincipal(HttpServletRequest httpRequest,
             AzureADUserPrincipal principal) throws Exception {
         httpRequest.getSession().setAttribute(PRINCIPAL_SESSION_NAME, principal);
     }
 
     /* HTTP セッションから認証結果の取得 */
+    /* get the authentication result from the HTTP session */
     public boolean getSessionPrincipal(HttpServletRequest request) {
         return request.getUserPrincipal() != null;
 //        return (AzureADUserPrincipal) request.getSession().getAttribute(PRINCIPAL_SESSION_NAME);
@@ -435,6 +441,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
 
 
     /* リダイレクト URL の取得 */
+    /* get the redirect URL */
     private String getRedirectUrl(String currentUri)
             throws UnsupportedEncodingException {
         String redirectUrl = authority
@@ -447,6 +454,8 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     }
 
     /* HTTP セッションから認証済みか否かのチェック */
+    /* check whether the HTTP session is authenticated or not */
+    // TODO does not seem to match method
     public boolean isRedirectedRequestFromAuthServer(HttpServletRequest httpRequest, Map<String, String> params) {
         return httpRequest.getMethod().equalsIgnoreCase("POST")
                 && (httpRequest.getParameterMap().containsKey(ERROR)
@@ -456,6 +465,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
 
 
     /* 認証データが含まれるか否かのチェック */
+    /* check whether authentication data is included or not */
     public boolean containsAuthenticationData(HttpServletRequest httpRequest) {
 //        System.out.println("containsAuthenticationData プリンシパル名：" + httpRequest.getUserPrincipal().getName());
 
@@ -469,6 +479,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
 
 
     /* リクエストの URI を取得 */
+    /* get the request URI */
     private String getCurrentUri(HttpServletRequest request) {
         String scheme = request.getScheme();
         int serverPort = request.getServerPort();

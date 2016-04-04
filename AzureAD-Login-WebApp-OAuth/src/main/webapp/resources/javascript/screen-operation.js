@@ -8,6 +8,8 @@ if (window.addEventListener) { //for W3C DOM
 
 function init() {
     //起動時は グループ部分は非表示
+    //きどうじは グループぶぶんは非表示
+    // hide the group section at start-up
     showUserTable();
 }
 

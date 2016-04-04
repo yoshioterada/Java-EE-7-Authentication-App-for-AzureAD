@@ -41,8 +41,12 @@ public class ADGroup {
     private String mailNickname;
     private String mailEnabled;
     private String onPremisesSecurityIdentifier;
-    private String[] provisioningErrors;// どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
-    private String[] proxyAddresses;// どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+    private String[] provisioningErrors;    // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+                                            // どのようなないようがはいるかわからないのでひつようにおうじこクラスをさくせいするひつようあり（たんなるもじはいれつでないばあいのかのうせい）
+                                            // Because it's not clear what the content will be, it is necessary to create a subclass accordingly (it is possible that a simple string won't do it)
+    private String[] proxyAddresses;        // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+                                            // どのようなないようがはいるかわからないのでひつようにおうじこクラスをさくせいするひつようあり（たんなるもじはいれつでないばあいのかのうせい）
+                                            // Because it's not clear what the content will be, it is necessary to create a subclass accordingly (it is possible that a simple string won't do it)
     private String securityEnabled;
 
     /**
