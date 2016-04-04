@@ -164,18 +164,23 @@ public class AzureADServerAuthModule implements ServerAuthModule {
         Callback[] callbacks;
 
         //Azure AD の認証後、リダイレクトで返ってきた場合
+        // if returning as a redirect after authenticating on Azure AD
         //プリンシパル情報はないので、認証に成功している場合、プリンシパルに追加
+        //プリンシパルじょうほうはないので、にんしょうにせいこうしているばあい、プリンシパルに追加
+        // as there is no principal information, if authentication was successful add info to the principal
         Map<String, String> params = new HashMap<>();
         httpRequest.getParameterMap().keySet().stream().forEach(key -> {
             params.put(key, httpRequest.getParameterMap().get(key)[0]);
         });
         String currentUri = getCurrentUri(httpRequest);
 
-        //セッション情報に認証結果が含まれない場合        
+        //セッション情報に認証結果が含まれない場合
+        // if the authentication result is not included in the session
         if (!getSessionPrincipal(httpRequest)) {
             if (!isRedirectedRequestFromAuthServer(httpRequest, params)) {
                 try {
-                    // Azure AD に Redirect 
+                    // Azure AD に Redirect
+                    // redirect to Azure ID
                     return redirectOpenIDServer(httpResponse, currentUri);
                 } catch (IOException ex) {
                     LOGGER.log(Level.SEVERE, "Invalid redirect URL", ex);
@@ -183,6 +188,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
                 }
             } else {
                 // Azure AD から返ってきたリクエストの場合
+                // if it's a request returning from Azure AD
                 messageInfo.getMap().put("javax.servlet.http.registerSession", Boolean.TRUE.toString());
                 messageInfo.getMap().put("javax.servlet.http.authType", "AzureADServerAuthModule");
                 return getAuthResultFromServerAndSetSession(clientSubject, httpRequest, params, currentUri);
@@ -190,10 +196,12 @@ public class AzureADServerAuthModule implements ServerAuthModule {
         } else {
             try {
                 //セッション情報に認証結果が含まれる場合
+                // if the authentication result is included in the session
                 AzureADUserPrincipal sessionPrincipal = (AzureADUserPrincipal) httpRequest.getUserPrincipal();
                 AuthenticationResult authenticationResult = sessionPrincipal.getAuthenticationResult();
                 if (authenticationResult.getExpiresOnDate().before(new Date())) {
                     //認証の日付が古い場合・リフレッシュトークンからアクセストークン取得
+                    // if the authentication date is old - get an access token from the refresh token
                     AuthenticationResult authResult = getAccessTokenFromRefreshToken(
                             authenticationResult.getRefreshToken(), currentUri);
                     setSessionPrincipal(httpRequest, new AzureADUserPrincipal(authResult));
@@ -230,9 +238,12 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     }
 
     /* ステップ１ 認証されていな最初のリクエストの場合 */
+    /* Step 1: when it's the initial unauthenticated request */
     private AuthStatus redirectOpenIDServer(HttpServletResponse httpResponse, String currentUri) throws UnsupportedEncodingException, IOException {
         //認証しておらず、認証データを持っていない場合
+        // if not authenticated, without any authentication data
         // 認証していない場合は Azure AD の認証画面にリダイレクト
+        // if it's not authenticated, redirect to Azure AD authentication screen
         String redirectUrl = getRedirectUrl(currentUri);
         httpResponse.setStatus(302);
         httpResponse.sendRedirect(getRedirectUrl(currentUri));
@@ -242,6 +253,9 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     /* ステップ２ リダイレクトされ code, id_token などが含まれる場合
        この時、認証結果をセッションに保存
      */
+    /* Step 2: when there is a code, id_token etc after being redirected
+        at this point, save the authentication result into the session 
+     */
     private AuthStatus getAuthResultFromServerAndSetSession(Subject clientSubject, HttpServletRequest httpRequest, Map<String, String> params, String currentUri) {
         try {
             String fullUrl = currentUri
@@ -250,17 +264,23 @@ public class AzureADServerAuthModule implements ServerAuthModule {
             AuthenticationResponse authResponse = AuthenticationResponseParser
                     .parse(new URI(fullUrl), params);
             //params の中に error が含まれている場合、AuthenticationErrorResponse
+            // if there is an error key in params, return AuthenticationErrorResponse
             //成功の場合 AuthenticationSuccessResponse が返る
+            // if it was successful, return AuthenticationSuccessResponse
 
             //認証に成功した場合
+            // if authentication was successful
             if (authResponse instanceof AuthenticationSuccessResponse) {
                 //レスポンスから結果を取得しセッションに保存
+                // obtain the result from the response and save it in the session
+                
                 AuthenticationSuccessResponse authSuccessResponse = (AuthenticationSuccessResponse) authResponse;
                 AuthenticationResult result = getAccessToken(authSuccessResponse.getAuthorizationCode(), currentUri);
                 AzureADUserPrincipal userPrincipal = new AzureADUserPrincipal(result);
                 setSessionPrincipal(httpRequest, userPrincipal);
 
-                //ユーザ・プリンシパルの設定 //
+                //ユーザ・プリンシパルの設定
+                // set the user principal
                 String[] groups = getGroupList(userPrincipal);
                 System.out.println("グループ: " + Arrays.toString(groups));
                 AzureADCallbackHandler azureCallBackHandler = new AzureADCallbackHandler(clientSubject, httpRequest, userPrincipal);
@@ -277,6 +297,7 @@ public class AzureADServerAuthModule implements ServerAuthModule {
                 return AuthStatus.SUCCESS;
             } else {
                 // 認証に失敗した場合
+                // if authentication failed
                 AuthenticationErrorResponse authErrorResponse = (AuthenticationErrorResponse) authResponse;
                 CallerPrincipalCallback callerCallBack = new CallerPrincipalCallback(clientSubject, (Principal) null);
                 GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(clientSubject, null);

@@ -124,7 +124,7 @@ public class LoginFilter implements Filter {
                 // ユーザがにんしょうずみのセッションをほじしているかチェック
                 // Check whether the user has an authenticated session
                 // セッションにプリンシパル情報が入っていれば認証済みと判断
-                // TODO translate
+                // if there is principal information in the session, we assume that it is authorized
                 if (!isAuthenticated(httpRequest)) {
                     if (!containsAuthenticationData(httpRequest)) {
                         //認証しておらず、認証データを持っていない場合
@@ -141,7 +141,7 @@ public class LoginFilter implements Filter {
                         //Azure AD の認証後、リダイレクトで返ってきた場合
                         // if returned here after a redirect following authentication
                         //プリンシパル情報はないので、認証に成功している場合、プリンシパルに追加
-                        // because there is no principal information, if authenticated successfully add a principal
+                        // because there is no principal information, if authenticated successfully add info to the principal
                         Map<String, String> params = new HashMap<>();
                         request.getParameterMap().keySet().stream().forEach(key -> {
                             params.put(key,

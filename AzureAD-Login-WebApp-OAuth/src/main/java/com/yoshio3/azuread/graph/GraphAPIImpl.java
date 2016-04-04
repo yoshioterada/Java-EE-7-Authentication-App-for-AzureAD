@@ -57,7 +57,7 @@ import org.glassfish.jersey.jackson.JacksonFeature;
                                             // New one: not supported yet
 
  Graph API のクエリ例
- Graph API のクエリ例
+ Graph API のクエリれい
  Graph API query examples
 
  https://msdn.microsoft.com/Library/Azure/Ad/Graph/howto/azure-ad-graph-api-supported-queries-filters-and-paging-options#CommonQueries

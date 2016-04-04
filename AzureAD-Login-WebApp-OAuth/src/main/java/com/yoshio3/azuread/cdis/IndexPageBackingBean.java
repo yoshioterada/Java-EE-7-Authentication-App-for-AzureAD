@@ -101,7 +101,7 @@ public class IndexPageBackingBean implements Serializable {
     }
     /* 特定グループに含まれるユーザ情報の取得 */
     /* とくていグループにふくまれるユーザじょうほうのしゅとく */
-    /* Getting information about the user included in a specific group */
+    /* Getting information about the users included in a specific group */
     public void onGroupRowSelect(SelectEvent event) {
         String groupid = ((ADGroup) event.getObject()).getObjectId();
         users = graph.getAllUsersInGroup(groupid).getValue();
