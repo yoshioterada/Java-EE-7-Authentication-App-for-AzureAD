@@ -1,5 +1,30 @@
 # Java-EE-7-Authentication-App-for-AzureAD
-This Project is an Azure AD Authentication sample application of Java EE 7 which used the ADAL4J and GraphAPI.
+
+This project is an Azure AD Authentication sample application of Java EE 7 which used the ADAL4J and GraphAPI.
+
+## Overview and Project Structure
+
+### Web App Module (AzureAD-Login-WebApp-OAuth)
+
+The project uses [JASPIC](http://blog.c2b2.co.uk/2015/01/using-jaspic-to-secure-web-application.html)
+   * Configured by a WebListener (com.yoshio3.jaspic.common.AzureADSAMRegistrationListener), which registers
+      * an authentication provider (com.yoshio3.jaspic.common.AzureADAuthConfigProvider), which in turn provides on request
+         * a new instance of the authentication config (com.yoshio3.jaspic.common.AzureADServerAuthConfig), including
+            * the singleton-like instance of the authentication module (com.yoshio3.jaspic.AzureADServerAuthModule)
+            * a new instance of the callback handler (com.yoshio3.jaspic.AzureADCallbackHandler)
+
+At each secured HTTP request, the validateRequest method on com.yoshio3.jaspic.AzureADServerAuthModule is executed. This implements
+the [OAuth2 logic](http://oauth.net/2/), with a set of domain objects that are specific to the Azure AD domain.
+
+Although there is a security filter in the web app, this is not needed with JASPIC.
+
+### SAM Module (AzureADSAMModule)
+
+This project only contains the code necessary to configure a SAM module for authenticating users via Azure AD.
+
+The web project above is an example of application of the SAM module contained here.
+
+## Setting up the Azure AD client application
 
 ![](https://c2.staticflickr.com/2/1609/25782167096_5ef75fb1ea_z.jpg)
 ![](https://c2.staticflickr.com/2/1717/25177762974_63755c37a6_z.jpg)
