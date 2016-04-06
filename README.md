@@ -8,13 +8,16 @@ This project is an Azure AD Authentication sample application of Java EE 7 which
 
 The project uses [JASPIC](http://blog.c2b2.co.uk/2015/01/using-jaspic-to-secure-web-application.html)
    * Configured by a WebListener (com.yoshio3.jaspic.common.AzureADSAMRegistrationListener), which registers
-      * an authentication provider (com.yoshio3.jaspic.common.AzureADAuthConfigProvider), which in turn provides on request
+      * an authentication provider (com.yoshio3.jaspic.common.AzureADAuthConfigProvider), which in turn provides on
+      request
          * a new instance of the authentication config (com.yoshio3.jaspic.common.AzureADServerAuthConfig), including
             * the singleton-like instance of the authentication module (com.yoshio3.jaspic.AzureADServerAuthModule)
             * a new instance of the callback handler (com.yoshio3.jaspic.AzureADCallbackHandler)
 
-At each secured HTTP request, the validateRequest method on com.yoshio3.jaspic.AzureADServerAuthModule is executed. This implements
-the [OAuth2 logic](http://oauth.net/2/), with a set of domain objects that are specific to the Azure AD domain.
+At each secured HTTP request, the config provider returns an instance of
+com.yoshio3.jaspic.common.AzureADServerAuthContext, which calls the the validateRequest method on
+com.yoshio3.jaspic.AzureADServerAuthModule. This implements the [OAuth2 logic](http://oauth.net/2/), with a set of
+domain objects that are specific to the Azure AD domain.
 
 Although there is a security filter in the web app, this is not needed with JASPIC.
 
