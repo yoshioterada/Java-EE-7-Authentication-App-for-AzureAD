@@ -116,14 +116,18 @@ public class GraphAPIImpl implements Serializable {
     public ADUsers getAllADUserFromGraph() {
         String graphURL = String.format("https://%s/%s/users", GRAPH_SEVER, tenant);
 
+        //Response res = jaxrsClient.target(graphURL)
         ADUsers users = jaxrsClient.target(graphURL)
                 .request()
                 .header("Host", GRAPH_SEVER)
                 .header("Accept", "application/json, text/plain, */*")
                 .header("api-version", "1.6")
                 .header("Authorization", authString)
+                //.get();
                 .get(ADUsers.class);
+        //LOGGER.log(Level.INFO, res.toString());
         LOGGER.log(Level.INFO, users.toString());
+        //return new ADUsers();
         return users;
     }
 
