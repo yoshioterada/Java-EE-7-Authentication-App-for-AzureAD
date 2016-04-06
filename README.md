@@ -19,6 +19,17 @@ com.yoshio3.jaspic.common.AzureADServerAuthContext, which calls the the validate
 com.yoshio3.jaspic.AzureADServerAuthModule. This implements the [OAuth2 logic](http://oauth.net/2/), with a set of
 domain objects that are specific to the Azure AD domain.
 
+#### Configure the login module in your app server
+
+Once authentication via OAuth2 is done, the system will hand over to the login module (com.yoshio3.jaspic.AzureADLoginModule), which must be configured
+under Glassfish. **You must add**
+
+    AzureAD-Login {
+        com.yoshio3.jaspic.AzureADLoginModule required;
+    };
+
+**to the login.conf file inside the config directory of your Glassfish domain**.
+
 Although there is a security filter in the web app, this is not needed with JASPIC.
 
 ### SAM Module (AzureADSAMModule)
@@ -51,20 +62,20 @@ The client application configuration will be created and added to the Active Dir
 
 Get the client application parameters for the web.xml configuration<br>
 ![](https://c2.staticflickr.com/2/1583/25713164061_605714c4f8_z.jpg)
-Copy the Client ID and paste in your web.xml file<br>
+<br>Copy the Client ID and paste in your web.xml file<br>
 ![](https://c2.staticflickr.com/2/1524/25226536833_4897bfe2d3_z.jpg)
 ![](https://c2.staticflickr.com/2/1653/25687287592_ea2718ec5c_z.jpg)
-Generate a secret key (valid for either one or two years), save it then copy it into your web.xml file<br>
+<br>Generate a secret key (valid for either one or two years), save it then copy it into your web.xml file<br>
 ![](https://c2.staticflickr.com/2/1532/25552393910_dd2ee850e9_z.jpg)
 ![](https://c2.staticflickr.com/2/1545/25853056805_f453fb5f3a_z.jpg)
 ![](https://c2.staticflickr.com/2/1550/25757951871_cc187e8638_z.jpg)
 ![](https://c2.staticflickr.com/2/1517/25552313050_a9f92d7a0c_z.jpg)
-This is where your parameters should go in your code<br>
+<br>This is where your parameters should go in your code<br>
 ![](https://c2.staticflickr.com/2/1485/25222251784_56c5dacf8b_z.jpg)
 
 Open the endpoints view<br>
 ![](https://c2.staticflickr.com/2/1486/25552248730_7204e9b8d3_z.jpg)
-You can get the tenant ID and OAuth 2 URLs for your web.xml from here<br>
+<br>You can get the tenant ID and OAuth 2 URLs for your web.xml from here<br>
 ![](https://c2.staticflickr.com/2/1605/25757883791_219b830a82_z.jpg)
 ![](https://c2.staticflickr.com/2/1669/25757809671_c585595c83_z.jpg)
 
@@ -72,15 +83,15 @@ Set the permissions for the application on the Configure page<br>
 ![](https://c2.staticflickr.com/2/1603/25177764514_a66f999c92_z.jpg)
 ![](https://c2.staticflickr.com/2/1709/25782168766_a0005b7358_z.jpg)
 ![](https://c2.staticflickr.com/2/1599/25177764574_946081ffdb_z.jpg)
-Remember to save!<br>
+<br>Remember to save!<br>
 ![](https://c2.staticflickr.com/2/1656/25507574850_3b742b332c_z.jpg)
 
 Add the Microsoft Graph application<br>
 ![](https://c2.staticflickr.com/2/1684/25782168846_ed3d30faa1_z.jpg)
-Add permissions to it as per the picture<br>
+<br>Add permissions to it as per the picture<br>
 ![](https://c2.staticflickr.com/2/1591/25782168926_495957acb6_z.jpg)
 ![](https://c2.staticflickr.com/2/1673/25687288582_b49e76f37c_z.jpg)
-And save!<br>
+<br>And save!<br>
 ![](https://c2.staticflickr.com/2/1668/25687288642_a52bebf626_z.jpg)
 
 Here is the application in action<br>
