@@ -1,18 +1,17 @@
 # Java-EE-7-Authentication-App-for-AzureAD
 
-This project is an Azure AD Authentication sample application of Java EE 7 which used the ADAL4J and GraphAPI.
+This project is an Azure AD Authentication sample application for Java EE 7 which uses ADAL4J and the Graph API.
 
 ## Overview and Project Structure
 
 ### Web App Module (AzureAD-Login-WebApp-OAuth)
 
 The project uses [JASPIC](http://blog.c2b2.co.uk/2015/01/using-jaspic-to-secure-web-application.html)
-   * Configured by a WebListener (com.yoshio3.jaspic.common.AzureADSAMRegistrationListener), which registers
-      * an authentication provider (com.yoshio3.jaspic.common.AzureADAuthConfigProvider), which in turn provides on
-      request
-         * a new instance of the authentication config (com.yoshio3.jaspic.common.AzureADServerAuthConfig), including
-            * the singleton-like instance of the authentication module (com.yoshio3.jaspic.AzureADServerAuthModule)
-            * a new instance of the callback handler (com.yoshio3.jaspic.AzureADCallbackHandler)
+* Configured by a WebListener (com.yoshio3.jaspic.common.AzureADSAMRegistrationListener), which registers
+  * an authentication provider (com.yoshio3.jaspic.common.AzureADAuthConfigProvider), which in turn provides on request
+  * a new instance of the authentication config (com.yoshio3.jaspic.common.AzureADServerAuthConfig), including
+    * the singleton-like instance of the authentication module (com.yoshio3.jaspic.AzureADServerAuthModule)
+    * a new instance of the callback handler (com.yoshio3.jaspic.AzureADCallbackHandler)
 
 At each secured HTTP request, the config provider returns an instance of
 com.yoshio3.jaspic.common.AzureADServerAuthContext, which calls the the validateRequest method on
