@@ -20,10 +20,13 @@ import com.yoshio3.azuread.cdis.extensionOfPF.GroupSelectionModel;
 import com.yoshio3.azuread.cdis.extensionOfPF.UserSelectionModel;
 import com.yoshio3.azuread.entities.ADGroup;
 import com.yoshio3.azuread.entities.ADUser;
+import java.io.IOException;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.annotation.security.PermitAll;
 import javax.faces.context.ExternalContext;
@@ -31,7 +34,10 @@ import javax.faces.context.FacesContext;
 import javax.faces.view.ViewScoped;
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import org.primefaces.event.SelectEvent;
 
 /**
@@ -42,6 +48,8 @@ import org.primefaces.event.SelectEvent;
 @ViewScoped
 @PermitAll
 public class IndexPageBackingBean implements Serializable {
+
+    private final static Logger LOGGER = Logger.getLogger(IndexPageBackingBean.class.getName());
 
     private UserSelectionModel selectionModel;
     private GroupSelectionModel groupSelectionModel;
@@ -78,6 +86,7 @@ public class IndexPageBackingBean implements Serializable {
     public void pushGetUsersInfo() {
         selectionModel = getSelectionModel();
     }
+
     /* グループ一覧の取得 */
     public void pushGetGroupsInfo() {
         if (groupSelectionModel == null) {
@@ -87,12 +96,14 @@ public class IndexPageBackingBean implements Serializable {
             groupSelectionModel = getGroupSelectionModel();
         }
     }
+
     /* 特定ユーザの詳細情報の取得 */
     public void onUserRowSelect(SelectEvent event) {
         String id = ((ADUser) event.getObject()).getObjectId();
         user = graph.getADUserFromGraph(id);
         memberOfGroup = graph.getMemberOfGroup(id).getValue();
     }
+
     /* 特定グループに含まれるユーザ情報の取得 */
     public void onGroupRowSelect(SelectEvent event) {
         String groupid = ((ADGroup) event.getObject()).getObjectId();
@@ -106,10 +117,11 @@ public class IndexPageBackingBean implements Serializable {
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         return externalContext.isUserInRole("admin");
     }
+
     /*
      * ユーザが持つ権限に応じた処理例
      */
-    public String nextPage() {        
+    public String nextPage() {
         ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
         if (externalContext.isUserInRole("admin")) {
             return "nextAdmin";
@@ -130,13 +142,37 @@ public class IndexPageBackingBean implements Serializable {
         return adUserFromGraph.getDisplayName() + " : " + adUserFromGraph.getUserPrincipalName() + " でログインしています。";
     }
 
-    /**********  以降は単なるセッタ・ゲッタ  Lombok の導入でセッタ・ゲッタは省略可 *******************/
+    public void logout() {
+        try {
+            ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
+
+            HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
+            request.logout();
+
+            HttpSession session = (HttpSession) externalContext.getSession(false);
+            session.invalidate();
+
+            HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
+            response.setHeader("Cache-Control", "no-cache"); //Forces caches to obtain a new copy of the page from the origin server
+            response.setHeader("Cache-Control", "no-store"); //Directs caches not to store the page under any circumstance
+            response.setDateHeader("Expires", 0); //Causes the proxy cache to see the page as "stale"
+            response.setHeader("Pragma", "no-cache"); //HTTP 1.0 backward compatibility
+            response.sendRedirect("https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost:8080");
+        } catch (ServletException | IOException ex) {
+            LOGGER.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * ******** 以降は単なるセッタ・ゲッタ Lombok の導入でセッタ・ゲッタは省略可 ******************
+     */
     /**
      * @param nameAndAddress the nameAndAddress to set
      */
     public void setNameAndAddress(String nameAndAddress) {
         this.nameAndAddress = nameAndAddress;
     }
+
     /**
      * @return the selectionModel
      */

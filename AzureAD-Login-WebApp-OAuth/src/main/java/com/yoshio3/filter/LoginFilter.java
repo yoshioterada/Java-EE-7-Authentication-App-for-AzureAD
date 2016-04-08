@@ -52,6 +52,7 @@ import java.util.logging.Logger;
  *
  * @author Yoshio Terada
  */
+@Deprecated
 public class LoginFilter implements Filter {
 
     private final Logger logger = Logger.getLogger(LoginFilter.class.getName());

@@ -283,10 +283,11 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     }
 
     private String[] getGroupList(HttpServletRequest request, AzureADUserPrincipal userPrincipal) {
+        //GraphAPIImpl は CDI で実装しているが、認証チェックの際 CDI は無効なので
+        //明示的なインスタンス化が必要
         GraphAPIImpl graph = new GraphAPIImpl();
         graph.init(request);
         return graph.getMemberOfGroup(userPrincipal.getName()).getValue();
-//        return graph.getMemberOfGroup(userPrincipal.getName()).getValue();
     }
 
     /* リフレッシュ・トークンからアクセス・トークンの取得  */
