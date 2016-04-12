@@ -87,15 +87,7 @@ public class GraphAPIImpl implements Serializable {
     @PostConstruct
     public void init() {
         HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-        AzureADUserPrincipal userPrincipal = (AzureADUserPrincipal) request.getSession().getAttribute(PRINCIPAL_SESSION_NAME);
-
-        authString = "Bearer " + userPrincipal.getAuthenticationResult().getAccessToken();
-        tenant = request.getServletContext().getInitParameter("tenant");
-
-        jaxrsClient = ClientBuilder.newClient()
-                .register((new JacksonJaxbJsonProvider(new ObjectMapper(), JacksonJaxbJsonProvider.DEFAULT_ANNOTATIONS)))
-                .register(JacksonFeature.class);
-        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
+        init(request);
     }
 
     public void init(HttpServletRequest request) {
@@ -111,7 +103,6 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 登録済みの全ユーザ取得 */
-    /* とうろくずみのぜんユーザしゅとく */
     /* Getting all registered users */
     public ADUsers getAllADUserFromGraph() {
         String graphURL = String.format("https://%s/%s/users", GRAPH_SEVER, tenant);
@@ -132,7 +123,6 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 指定した ID (メールアドレス・)に対応する ADのユーザ取得 */
-    /* していした ID (メールアドレス・)にたいおうする ADのユーザしゅとく */
     /* Getting an AD user for a specified ID (mail address) */
     public ADUser getADUserFromGraph(String id) {
         String graphURL = String.format("https://%s/%s/users/%s", GRAPH_SEVER, tenant, id);
@@ -162,7 +152,6 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 指定した グループID に対応するグループ取得 */
-    /* していした グループID にたいおうするグループしゅとく */
     /* Getting an AD group for a specified group ID */
     public ADGroup getADGroupFromGraph(String groupid) {
         String graphURL = String.format("https://%s/%s/groups/%s", GRAPH_SEVER, tenant, groupid);
@@ -179,7 +168,6 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 指定した グループID に所属するユーザ一覧取得 */
-    /* していした グループID にしょぞくするユーザいちらんしゅとく */
     /* Getting the list of users that belong to a specified group ID */
     public ADUsers getAllUsersInGroup(String groupid) {
         String graphURL = String.format("https://%s/%s/groups/%s/members", GRAPH_SEVER, tenant, groupid);
@@ -195,7 +183,6 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 指定した ユーザID が所属するグループの一覧を取得 */
-    /* していした ユーザID がしょぞくするグループのいちらんをしゅとく */
     /* Getting the list of group that a specified user ID belongs to */
     public ADUserMemberOfGroups getMemberOfGroup(String userID) {
         String graphURL = String.format("https://%s/%s/users/%s/getMemberGroups", GRAPH_SEVER, tenant, userID);
