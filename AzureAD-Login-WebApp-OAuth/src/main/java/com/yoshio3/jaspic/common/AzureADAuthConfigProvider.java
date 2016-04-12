@@ -30,6 +30,8 @@ import javax.security.auth.message.module.ServerAuthModule;
  * @author Yoshio Terada
  */
 public class AzureADAuthConfigProvider implements AuthConfigProvider {
+    
+    private final static String CALLBACK_CLASS_NAME = "com.yoshio3.jaspic.AzureADCallbackHandler";
 
     private Map<String, String> providerProperties;
     private ServerAuthModule serverAuthModule;
@@ -64,7 +66,7 @@ public class AzureADAuthConfigProvider implements AuthConfigProvider {
         }
     }
 
-    /**
+    /*
      * The actual factory method that creates the factory used to eventually obtain the delegate for a SAM.
      */
     @Override
@@ -97,7 +99,7 @@ public class AzureADAuthConfigProvider implements AuthConfigProvider {
 
     private CallbackHandler createDefaultCallbackHandler() throws AuthException {
         //TODO web.xml 経由で取得するのがベター
-        String callBackClassName = "com.yoshio3.jaspic.AzureADCallbackHandler";
+        String callBackClassName = CALLBACK_CLASS_NAME;
 
         if (callBackClassName == null) {
             throw new AuthException("No default handler set via system property: " + callBackClassName);

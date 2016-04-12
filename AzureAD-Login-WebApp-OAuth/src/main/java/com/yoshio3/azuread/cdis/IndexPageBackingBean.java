@@ -157,7 +157,7 @@ public class IndexPageBackingBean implements Serializable {
             response.setHeader("Cache-Control", "no-store"); //Directs caches not to store the page under any circumstance
             response.setDateHeader("Expires", 0); //Causes the proxy cache to see the page as "stale"
             response.setHeader("Pragma", "no-cache"); //HTTP 1.0 backward compatibility
-            response.sendRedirect("https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost:8080");
+            response.sendRedirect("https://login.microsoftonline.com/common/oauth2/logout?post_logout_redirect_uri=http%3A%2F%2Flocalhost:8080%2FAzureAD-Login-WebApp-OAuth");
         } catch (ServletException | IOException ex) {
             LOGGER.log(Level.SEVERE, null, ex);
         }
