@@ -88,6 +88,7 @@ public class AzureADLoginModule implements LoginModule {
 
     @Override
     public boolean logout() throws LoginException {
+        subject.getPrincipals().removeAll(principals);
         return true;
     }
 }
