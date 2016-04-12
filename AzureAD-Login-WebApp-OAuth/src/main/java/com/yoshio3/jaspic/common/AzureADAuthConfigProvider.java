@@ -31,6 +31,7 @@ import javax.security.auth.message.module.ServerAuthModule;
  */
 public class AzureADAuthConfigProvider implements AuthConfigProvider {
 
+    private final static String CALLBACK_CLASS_NAME = "com.yoshio3.jaspic.AzureADCallbackHandler";    
     private Map<String, String> providerProperties;
     private ServerAuthModule serverAuthModule;
     private MessagePolicy requestPolicy;
@@ -98,8 +99,7 @@ public class AzureADAuthConfigProvider implements AuthConfigProvider {
     private CallbackHandler createDefaultCallbackHandler() throws AuthException {
         //TODO web.xml 経由で取得するのがベター
         //TODO better to obtain this via web.xml
-        String callBackClassName = "com.yoshio3.jaspic.AzureADCallbackHandler";
-
+        String callBackClassName = CALLBACK_CLASS_NAME;
         if (callBackClassName == null) {
             throw new AuthException("No default handler set via system property: " + callBackClassName);
         }

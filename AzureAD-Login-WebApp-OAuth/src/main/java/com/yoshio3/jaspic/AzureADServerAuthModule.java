@@ -406,7 +406,6 @@ public class AzureADServerAuthModule implements ServerAuthModule {
     }
 
     /* HTTP セッションから認証済みか否かのチェック */
-    /* HTTP セッションからにんしょうずみかいなかのチェック */
     /* check whether the HTTP session is authenticated or not */
     // TODO this comment seems misplaced
     public boolean isRedirectedRequestFromAuthServer(HttpServletRequest httpRequest, Map<String, String> params) {

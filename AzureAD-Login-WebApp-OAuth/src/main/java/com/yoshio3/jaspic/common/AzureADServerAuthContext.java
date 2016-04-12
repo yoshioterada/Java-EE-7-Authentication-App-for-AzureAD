@@ -29,10 +29,12 @@ import javax.security.auth.message.module.ServerAuthModule;
  *
  * @author Yoshio Terada
  */
-public class AzureADServerAuthContext implements ServerAuthContext{
-    private final ServerAuthModule serverAuthModule;
+public class AzureADServerAuthContext implements ServerAuthContext {
 
-    public AzureADServerAuthContext(MessagePolicy requestPolicy,MessagePolicy responsePolicy, CallbackHandler handler,Map<String, String> options, ServerAuthModule serverAuthModule) throws AuthException {
+    private final ServerAuthModule serverAuthModule;
+    private static final String IS_MANDATORY = "javax.security.auth.message.MessagePolicy.isMandatory";
+
+    public AzureADServerAuthContext(MessagePolicy requestPolicy, MessagePolicy responsePolicy, CallbackHandler handler, Map<String, String> options, ServerAuthModule serverAuthModule) throws AuthException {
         this.serverAuthModule = serverAuthModule;
 //        serverAuthModule.initialize(null, null, handler, Collections.<String, String> emptyMap());
         serverAuthModule.initialize(requestPolicy, responsePolicy, handler, options);
@@ -40,8 +42,14 @@ public class AzureADServerAuthContext implements ServerAuthContext{
 
     @Override
     public AuthStatus validateRequest(MessageInfo messageInfo, Subject clientSubject, Subject serviceSubject)
-        throws AuthException {
-        return serverAuthModule.validateRequest(messageInfo, clientSubject, serviceSubject);
+            throws AuthException {
+        // web.xml の<web-resource-collection><url-pattern>のパターンの内容で認証
+        // の有無を決定(パターンにマッチしない場合認証は不要)
+        if (!Boolean.valueOf((String) messageInfo.getMap().get(IS_MANDATORY))) {
+            return AuthStatus.SUCCESS;
+        } else {
+            return serverAuthModule.validateRequest(messageInfo, clientSubject, serviceSubject);
+        }
     }
 
     @Override

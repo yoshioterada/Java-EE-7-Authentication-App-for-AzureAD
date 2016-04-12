@@ -1,0 +1,23 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html">
+    <h:head>
+        <title>Facelet Title</title>
+    </h:head>
+    <h:body>
+        <h3>ユーザ・グループ情報取得画面へ</h3>
+        <h:form id="login-form">
+            <h:outputText value="#{indexPage.nameAndAddress}" /> <br></br>
+            <h:commandButton id="button" value="ユーザ・グループ情報取得" action="/secure/index.xhtml?faces-redirect=true"/>
+            <br/>
+            <h:commandButton id="nextPage" value="権限に応じた画面遷移先" action="#{indexPage.nextPage()}"/>
+            <h:commandButton id="test" value="TEST" action="#{test.foo}"/>
+            
+            <h:commandButton id="logout" value="ログアウト" action="#{indexPage.logout()}"/>
+            <h:messages />
+            <br/>
+        </h:form>
+
+    </h:body>
+</html>

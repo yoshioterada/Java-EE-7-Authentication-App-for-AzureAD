@@ -6,15 +6,15 @@
         </context-param>
       <context-param>
             <param-name>tenant</param-name>
-            <param-value>eefd08c5-9af2-4662-b088-1e3d85dd10d5</param-value>
+            <param-value>a3dde8af-d32c-4dd9-968b-be60d84f413c</param-value>
         </context-param>
         <context-param>
             <param-name>client_id</param-name>
-            <param-value>163609d8-b4d4-4b7c-83da-d81e970cf647</param-value>
+            <param-value>5a6b74d8-587c-47a3-a0ab-ebd79ba2dddf</param-value>
         </context-param>
         <context-param>
             <param-name>secret_key</param-name>
-            <param-value>SemcLzLq/F7JgKUwsmwsDQ5wCZgTdmbSEbgnHwef7Jo=</param-value>
+            <param-value>szn+0CkXCyVnV62RmYkkXx5gYXWujKaO10UcIuofCKI=</param-value>
         </context-param>
         <context-param>
             <param-name>javax.security.auth.login.LoginContext</param-name>
@@ -27,7 +27,7 @@
     <security-constraint>
         <web-resource-collection>
             <web-resource-name>AzureAD Resource</web-resource-name>
-            <url-pattern>/secure/*</url-pattern>
+            <url-pattern>/faces/secure/*</url-pattern>
         </web-resource-collection>
         <auth-constraint>
             <role-name>standard</role-name>
