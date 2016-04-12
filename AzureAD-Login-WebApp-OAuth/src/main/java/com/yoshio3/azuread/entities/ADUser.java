@@ -15,6 +15,7 @@
 */
 package com.yoshio3.azuread.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Arrays;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -24,6 +25,7 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author Yoshio Terada
  */
 @XmlRootElement
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ADUser {
 
     @JsonProperty("odata.metadata")
@@ -52,15 +54,23 @@ public class ADUser {
     private String mailNickname;
     private String mobile;
     private String onPremisesSecurityIdentifier;
-    private String[] otherMails;// どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+    private String[] otherMails;    // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+                                    // どのようなないようがはいるかわからないのでひつようにおうじこクラスをさくせいするひつようあり（たんなるもじはいれつでないばあいのかのうせい）
+                                    // Because it's not clear what the content will be, it is necessary to create a subclass accordingly (it is possible that a simple string won't do it)
     private String passwordPolicies;
-    private String passwordProfile;
+    //private String passwordProfile;
     private String physicalDeliveryOfficeName;
     private String postalCode;
     private String preferredLanguage;
-    private String[] provisionedPlans;   // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
-    private String[] provisioningErrors;// どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
-    private String[] proxyAddresses;// どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+    private String[] provisionedPlans;  // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+                                        // どのようなないようがはいるかわからないのでひつようにおうじこクラスをさくせいするひつようあり（たんなるもじはいれつでないばあいのかのうせい）
+                                        // Because it's not clear what the content will be, it is necessary to create a subclass accordingly (it is possible that a simple string won't do it)
+    private String[] provisioningErrors;    // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+                                            // どのようなないようがはいるかわからないのでひつようにおうじこクラスをさくせいするひつようあり（たんなるもじはいれつでないばあいのかのうせい）
+                                            // Because it's not clear what the content will be, it is necessary to create a subclass accordingly (it is possible that a simple string won't do it)
+    private String[] proxyAddresses;    // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり(単なる文字配列でない場合の可能性)
+                                        // どのようなないようがはいるかわからないのでひつようにおうじこクラスをさくせいするひつようあり（たんなるもじはいれつでないばあいのかのうせい）
+                                        // Because it's not clear what the content will be, it is necessary to create a subclass accordingly (it is possible that a simple string won't do it)
     private String sipProxyAddress;
     private String state;
     private String streetAddress;
@@ -69,7 +79,9 @@ public class ADUser {
     private String usageLocation;
     private String userPrincipalName;
     private String userType;
-    private String[] signInNames; // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり
+    private String[] signInNames;   // どのような内容が入るかわからないので必要に応じ子クラスを作成する必要あり
+                                    // どのようなないようがはいるかわからないのでひつようにおうじこクラスをさくせいするひつようあり
+                                    // Because it's not clear what the content will be, it is necessary to create a subclass accordingly
     private String isCompromised;
 
 
@@ -391,16 +403,16 @@ public class ADUser {
     /**
      * @return the passwordProfile
      */
-    public String getPasswordProfile() {
-        return passwordProfile;
-    }
+    //public String getPasswordProfile() {
+    //    return passwordProfile;
+    //}
 
     /**
      * @param passwordProfile the passwordProfile to set
      */
-    public void setPasswordProfile(String passwordProfile) {
-        this.passwordProfile = passwordProfile;
-    }
+    //public void setPasswordProfile(String passwordProfile) {
+    //    this.passwordProfile = passwordProfile;
+    //}
 
     /**
      * @return the physicalDeliveryOfficeName
@@ -684,6 +696,6 @@ public class ADUser {
 
     @Override
     public String toString() {
-        return "ADUser{" + "metadata=" + metadata + ", odata_type=" + odata_type + ", objectType=" + objectType + ", objectId=" + objectId + ", deletionTimestamp=" + deletionTimestamp + ", accountEnabled=" + accountEnabled + ", assignedLicenses=" + Arrays.toString(assignedLicenses) + ", assignedPlans=" + Arrays.toString(assignedPlans) + ", city=" + city + ", companyName=" + companyName + ", country=" + country + ", creationType=" + creationType + ", department=" + department + ", dirSyncEnabled=" + dirSyncEnabled + ", displayName=" + displayName + ", facsimileTelephoneNumber=" + facsimileTelephoneNumber + ", givenName=" + givenName + ", immutableId=" + immutableId + ", jobTitle=" + jobTitle + ", lastDirSyncTime=" + lastDirSyncTime + ", mail=" + mail + ", mailNickname=" + mailNickname + ", mobile=" + mobile + ", onPremisesSecurityIdentifier=" + onPremisesSecurityIdentifier + ", otherMails=" + Arrays.toString(otherMails) + ", passwordPolicies=" + passwordPolicies + ", passwordProfile=" + passwordProfile + ", physicalDeliveryOfficeName=" + physicalDeliveryOfficeName + ", postalCode=" + postalCode + ", preferredLanguage=" + preferredLanguage + ", provisionedPlans=" + Arrays.toString(provisionedPlans) + ", provisioningErrors=" + Arrays.toString(provisioningErrors) + ", proxyAddresses=" + Arrays.toString(proxyAddresses) + ", sipProxyAddress=" + sipProxyAddress + ", state=" + state + ", streetAddress=" + streetAddress + ", surname=" + surname + ", telephoneNumber=" + telephoneNumber + ", usageLocation=" + usageLocation + ", userPrincipalName=" + userPrincipalName + ", userType=" + userType + ", signInNames=" + Arrays.toString(signInNames) + ", isCompromised=" + isCompromised + '}';
+        return "ADUser{" + "metadata=" + metadata + ", odata_type=" + odata_type + ", objectType=" + objectType + ", objectId=" + objectId + ", deletionTimestamp=" + deletionTimestamp + ", accountEnabled=" + accountEnabled + ", assignedLicenses=" + Arrays.toString(assignedLicenses) + ", assignedPlans=" + Arrays.toString(assignedPlans) + ", city=" + city + ", companyName=" + companyName + ", country=" + country + ", creationType=" + creationType + ", department=" + department + ", dirSyncEnabled=" + dirSyncEnabled + ", displayName=" + displayName + ", facsimileTelephoneNumber=" + facsimileTelephoneNumber + ", givenName=" + givenName + ", immutableId=" + immutableId + ", jobTitle=" + jobTitle + ", lastDirSyncTime=" + lastDirSyncTime + ", mail=" + mail + ", mailNickname=" + mailNickname + ", mobile=" + mobile + ", onPremisesSecurityIdentifier=" + onPremisesSecurityIdentifier + ", otherMails=" + Arrays.toString(otherMails) + ", passwordPolicies=" + /* passwordPolicies + ", passwordProfile=" + passwordProfile + */ ", physicalDeliveryOfficeName=" + physicalDeliveryOfficeName + ", postalCode=" + postalCode + ", preferredLanguage=" + preferredLanguage + ", provisionedPlans=" + Arrays.toString(provisionedPlans) + ", provisioningErrors=" + Arrays.toString(provisioningErrors) + ", proxyAddresses=" + Arrays.toString(proxyAddresses) + ", sipProxyAddress=" + sipProxyAddress + ", state=" + state + ", streetAddress=" + streetAddress + ", surname=" + surname + ", telephoneNumber=" + telephoneNumber + ", usageLocation=" + usageLocation + ", userPrincipalName=" + userPrincipalName + ", userType=" + userType + ", signInNames=" + Arrays.toString(signInNames) + ", isCompromised=" + isCompromised + '}';
     }
 }

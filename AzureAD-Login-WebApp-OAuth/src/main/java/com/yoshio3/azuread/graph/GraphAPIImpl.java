@@ -43,16 +43,31 @@ import org.glassfish.jersey.jackson.JacksonFeature;
 
 /*
  参考情報
+ さんこうじょうほう
+ Reference information
+
  Graph Explorer ：ブラウザから参照可能な便利ツール
- https://graphexplorer.cloudapp.net/ //現在の方
- https://graphexplorer2.azurewebsites.net/ // 新しい方：まだ未対応
+ Graph Explorer ：ブラウザからさんしょうかのうなべんりツール
+ Graph Explorer ：Convenient tool accessible from the browser
+ https://graphexplorer.cloudapp.net/    //現在の方
+                                        //げんざいのほう
+                                        //Current one
+ https://graphexplorer2.azurewebsites.net/  // 新しい方：まだ未対応
+                                            // あたらしいほう：まだみたいおう
+                                            // New one: not supported yet
 
  Graph API のクエリ例
+ Graph API のクエリれい
+ Graph API query examples
+
  https://msdn.microsoft.com/Library/Azure/Ad/Graph/howto/azure-ad-graph-api-supported-queries-filters-and-paging-options#CommonQueries
  https://graph.microsoft.io/ja-jp/docs/authorization/app_authorization
 
   これを見ながら改造
-//https://azure.microsoft.com/ja-jp/documentation/articles/active-directory-devquickstarts-webapp-java/
+  これをみながらかいぞう
+  Modified based on this
+
+  https://azure.microsoft.com/ja-jp/documentation/articles/active-directory-devquickstarts-webapp-java/
  */
 /**
  *
@@ -96,21 +111,29 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 登録済みの全ユーザ取得 */
+    /* とうろくずみのぜんユーザしゅとく */
+    /* Getting all registered users */
     public ADUsers getAllADUserFromGraph() {
         String graphURL = String.format("https://%s/%s/users", GRAPH_SEVER, tenant);
 
+        //Response res = jaxrsClient.target(graphURL)
         ADUsers users = jaxrsClient.target(graphURL)
                 .request()
                 .header("Host", GRAPH_SEVER)
                 .header("Accept", "application/json, text/plain, */*")
                 .header("api-version", "1.6")
                 .header("Authorization", authString)
+                //.get();
                 .get(ADUsers.class);
+        //LOGGER.log(Level.INFO, res.toString());
         LOGGER.log(Level.INFO, users.toString());
+        //return new ADUsers();
         return users;
     }
 
     /* 指定した ID (メールアドレス・)に対応する ADのユーザ取得 */
+    /* していした ID (メールアドレス・)にたいおうする ADのユーザしゅとく */
+    /* Getting an AD user for a specified ID (mail address) */
     public ADUser getADUserFromGraph(String id) {
         String graphURL = String.format("https://%s/%s/users/%s", GRAPH_SEVER, tenant, id);
         ADUser user = jaxrsClient.target(graphURL)
@@ -139,6 +162,8 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 指定した グループID に対応するグループ取得 */
+    /* していした グループID にたいおうするグループしゅとく */
+    /* Getting an AD group for a specified group ID */
     public ADGroup getADGroupFromGraph(String groupid) {
         String graphURL = String.format("https://%s/%s/groups/%s", GRAPH_SEVER, tenant, groupid);
 
@@ -154,6 +179,8 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 指定した グループID に所属するユーザ一覧取得 */
+    /* していした グループID にしょぞくするユーザいちらんしゅとく */
+    /* Getting the list of users that belong to a specified group ID */
     public ADUsers getAllUsersInGroup(String groupid) {
         String graphURL = String.format("https://%s/%s/groups/%s/members", GRAPH_SEVER, tenant, groupid);
         ADUsers users = jaxrsClient.target(graphURL)
@@ -168,6 +195,8 @@ public class GraphAPIImpl implements Serializable {
     }
 
     /* 指定した ユーザID が所属するグループの一覧を取得 */
+    /* していした ユーザID がしょぞくするグループのいちらんをしゅとく */
+    /* Getting the list of group that a specified user ID belongs to */
     public ADUserMemberOfGroups getMemberOfGroup(String userID) {
         String graphURL = String.format("https://%s/%s/users/%s/getMemberGroups", GRAPH_SEVER, tenant, userID);
         JsonObject model = Json.createObjectBuilder()
