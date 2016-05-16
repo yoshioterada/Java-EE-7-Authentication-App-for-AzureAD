@@ -9,10 +9,11 @@
         <h3>ユーザ・グループ情報取得画面へ</h3>
         <h:form id="login-form">
             <h:outputText value="#{indexPage.nameAndAddress}" /> <br></br>
+            実行環境：<h:outputText id="runenv" value="#{indexPage.hostInfo}"/><br></br>
+
             <h:commandButton id="button" value="ユーザ・グループ情報取得" action="/secure/index.xhtml?faces-redirect=true"/>
             <br/>
             <h:commandButton id="nextPage" value="権限に応じた画面遷移先" action="#{indexPage.nextPage()}"/>
-            <h:commandButton id="test" value="TEST" action="#{test.foo}"/>
             
             <h:commandButton id="logout" value="ログアウト" action="#{indexPage.logout()}"/>
             <h:messages />

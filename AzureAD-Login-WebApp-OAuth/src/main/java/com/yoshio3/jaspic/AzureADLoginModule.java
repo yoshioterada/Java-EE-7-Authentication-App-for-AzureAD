@@ -18,6 +18,8 @@ package com.yoshio3.jaspic;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import java.io.IOException;
 import java.security.Principal;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
@@ -59,14 +61,18 @@ public class AzureADLoginModule implements LoginModule {
             throw new LoginException("No CallbackHandler specified");
         }
         principals = subject.getPrincipals();
-        Callback[] callbacks = new Callback[principals.size()];
+
+        List<Callback> data = new ArrayList<>();
         principals.stream().forEach((princ) -> {
             if (princ instanceof AzureADUserPrincipal) {
                 CallerPrincipalCallback callerPrincipalCallback = new CallerPrincipalCallback(subject, princ);
+                data.add(callerPrincipalCallback);
             }else if(princ instanceof GroupPrincipalCallback){
                 GroupPrincipalCallback groupPrincipalCallback = new GroupPrincipalCallback(subject, ((GroupPrincipalCallback) princ).getGroups());                
+                data.add(groupPrincipalCallback);
             }
         });
+        Callback[] callbacks = data.toArray(new Callback[0]);
         try {
             callbackHandler.handle(callbacks);
         } catch (IOException | UnsupportedCallbackException ex) {

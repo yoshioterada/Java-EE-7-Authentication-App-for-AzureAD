@@ -22,6 +22,8 @@ import com.yoshio3.azuread.entities.ADGroup;
 import com.yoshio3.azuread.entities.ADUser;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.Principal;
 import java.util.Arrays;
 import java.util.List;
@@ -73,6 +75,8 @@ public class IndexPageBackingBean implements Serializable {
     private String[] memberOfGroup;
 
     private String nameAndAddress;
+    
+    private String hostInfo;        
 
     @PostConstruct
     public void init() {
@@ -155,17 +159,13 @@ public class IndexPageBackingBean implements Serializable {
         return adUserFromGraph.getDisplayName() + " : " + adUserFromGraph.getUserPrincipalName() + " でログインしています。";
     }
 
-    /**********  以降は単なるセッタ・ゲッタ  Lombok の導入でセッタ・ゲッタは省略可 *******************/
-    /**********  From this point on, just plain getters and setters    with the introduction of Lombok, getters and setters are optional *******************/
     public void logout() {
         try {
             ExternalContext externalContext = FacesContext.getCurrentInstance().getExternalContext();
 
             HttpServletRequest request = (HttpServletRequest) externalContext.getRequest();
             request.logout();
-
-            HttpSession session = (HttpSession) externalContext.getSession(false);
-            session.invalidate();
+            request.getSession().invalidate();
 
             HttpServletResponse response = (HttpServletResponse) externalContext.getResponse();
             response.setHeader("Cache-Control", "no-cache"); //Forces caches to obtain a new copy of the page from the origin server
@@ -177,7 +177,23 @@ public class IndexPageBackingBean implements Serializable {
             LOGGER.log(Level.SEVERE, null, ex);
         }
     }
+    
+       
+    public String getHostInfo(){
+        String host ="";
+        InetAddress IPaddress;
+        try {
+            IPaddress = java.net.InetAddress.getLocalHost();
+            host = IPaddress.getHostName() + "/" +IPaddress.getHostAddress() ;            
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(IndexPageBackingBean.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return host;
+    }
 
+    /**********  以降は単なるセッタ・ゲッタ  Lombok の導入でセッタ・ゲッタは省略可 *******************/
+    /**********  From this point on, just plain getters and setters    with the introduction of Lombok, getters and setters are optional *******************/    
+    
     /**
      * @param nameAndAddress the nameAndAddress to set
      */
